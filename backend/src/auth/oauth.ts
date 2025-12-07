@@ -9,12 +9,15 @@ const TOKEN_KV_KEY = 'meli_oauth_token';
 // Lazy load Vercel KV to avoid import errors in non-Vercel environments
 let kv: any = null;
 const getKV = async () => {
+    console.log('[DEBUG] getKV called. Existing kv:', !!kv);
     if (!kv && process.env['KV_REST_API_URL'] && process.env['KV_REST_API_TOKEN']) {
+        console.log('[DEBUG] Attempting to import @vercel/kv...');
         try {
             const { kv: kvClient } = await import('@vercel/kv');
             kv = kvClient;
+            console.log('[DEBUG] @vercel/kv imported successfully');
         } catch (error) {
-            console.log('⚠️  Vercel KV not available, using file storage');
+            console.log('⚠️  Vercel KV not available, using file storage', error);
         }
     }
     return kv;
@@ -150,11 +153,14 @@ export class MercadoLibreAuth {
      * Load tokens from Vercel KV (serverless) or file (local)
      */
     private async loadTokensAsync(): Promise<void> {
+        console.log('[DEBUG] Starting loadTokensAsync...');
         // Try Vercel KV first
         const kvClient = await getKV();
         if (kvClient) {
+            console.log('[DEBUG] KV Client obtained, attempting to get token...');
             try {
                 const data = await kvClient.get(TOKEN_KV_KEY);
+                console.log('[DEBUG] KV Get Result:', data ? 'Data found' : 'No data found');
                 if (data) {
                     this.tokenData = data as TokenData;
                     console.log('✅ Tokens loaded from Vercel KV');
@@ -163,6 +169,11 @@ export class MercadoLibreAuth {
             } catch (error) {
                 console.log('⚠️  Error loading tokens from Vercel KV:', error);
             }
+        } else {
+            console.log('[DEBUG] No KV Client available. Env vars:', {
+                url: !!process.env['KV_REST_API_URL'],
+                token: !!process.env['KV_REST_API_TOKEN']
+            });
         }
 
         // Fallback to file storage for local development
