@@ -6,21 +6,40 @@ import { TokenData } from '../types';
 const TOKEN_FILE = path.join(__dirname, '../../tokens.json');
 const TOKEN_KV_KEY = 'meli_oauth_token';
 
-// Lazy load Vercel KV to avoid import errors in non-Vercel environments
-let kv: any = null;
-const getKV = async () => {
-    console.log('[DEBUG] getKV called. Existing kv:', !!kv);
-    if (!kv && process.env['KV_REST_API_URL'] && process.env['KV_REST_API_TOKEN']) {
-        console.log('[DEBUG] Attempting to import @vercel/kv...');
-        try {
-            const { kv: kvClient } = await import('@vercel/kv');
-            kv = kvClient;
-            console.log('[DEBUG] @vercel/kv imported successfully');
-        } catch (error) {
-            console.log('⚠️  Vercel KV not available, using file storage', error);
-        }
+// Helper to interact with Vercel KV via REST API using fetch
+// This avoids dependency issues with @vercel/kv package
+const kvRestApi = async (method: string, params: any[] = []) => {
+    const url = process.env['KV_REST_API_URL'];
+    const token = process.env['KV_REST_API_TOKEN'];
+
+    if (!url || !token) {
+        console.log('[DEBUG] KV Env Vars missing');
+        return null;
     }
-    return kv;
+
+    try {
+        // Append command to URL for Upstash/Vercel KV REST API
+        // e.g. https://.../mget/key1/key2 or just set/get
+        // For simple commands: POST /
+        const response = await fetch(`${url}/`, {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(params),
+        });
+
+        if (!response.ok) {
+            console.log(`[DEBUG] KV REST API Error: ${response.status} ${response.statusText}`);
+            return null;
+        }
+
+        const data = await response.json() as any;
+        return data.result;
+    } catch (error) {
+        console.log('[DEBUG] KV Fetch Error:', error);
+        return null;
+    }
 };
 
 export class MercadoLibreAuth {
@@ -33,7 +52,7 @@ export class MercadoLibreAuth {
         this.appId = process.env['APP_ID'] || '';
         this.appSecret = process.env['APP_SECRET'] || '';
         this.redirectUri = process.env['REDIRECT_URI'] || 'http://localhost:3000/callback';
-        this.loadTokens();
+        // We do not load tokens in constructor anymore, they are lazy loaded
     }
 
     /**
@@ -62,9 +81,9 @@ export class MercadoLibreAuth {
                 created_at: Date.now(),
             };
 
-            this.saveTokens();
+            await this.saveTokens();
             console.log('✅ Access token obtained successfully');
-            return this.tokenData;
+            return this.tokenData!;
         } catch (error: any) {
             console.error('Error getting access token:', error.response?.data || error.message);
             throw error;
@@ -92,9 +111,9 @@ export class MercadoLibreAuth {
                 created_at: Date.now(),
             };
 
-            this.saveTokens();
+            await this.saveTokens();
             console.log('✅ Access token refreshed successfully');
-            return this.tokenData;
+            return this.tokenData!;
         } catch (error: any) {
             console.error('Error refreshing token:', error.response?.data || error.message);
             throw error;
@@ -153,27 +172,28 @@ export class MercadoLibreAuth {
      * Load tokens from Vercel KV (serverless) or file (local)
      */
     private async loadTokensAsync(): Promise<void> {
-        console.log('[DEBUG] Starting loadTokensAsync...');
-        // Try Vercel KV first
-        const kvClient = await getKV();
-        if (kvClient) {
-            console.log('[DEBUG] KV Client obtained, attempting to get token...');
+        console.log('[DEBUG] Starting loadTokensAsync (fetch mode)...');
+
+        // Try Vercel KV via REST API
+        if (process.env['KV_REST_API_URL']) {
+            console.log('[DEBUG] KV URL found, attempting fetch...');
             try {
-                const data = await kvClient.get(TOKEN_KV_KEY);
-                console.log('[DEBUG] KV Get Result:', data ? 'Data found' : 'No data found');
-                if (data) {
-                    this.tokenData = data as TokenData;
-                    console.log('✅ Tokens loaded from Vercel KV');
+                // Command: ["GET", "key"]
+                const result = await kvRestApi('POST', ['GET', TOKEN_KV_KEY]);
+                console.log('[DEBUG] KV Fetch Result type:', typeof result);
+
+                if (result) {
+                    // Upstash returns the string value, we need to parse it if it's JSON
+                    // But if we stored it as JSON/Object using SET command, it might come back as string or object
+                    this.tokenData = typeof result === 'string' ? JSON.parse(result) : result;
+                    console.log('✅ Tokens loaded from Vercel KV (REST)');
                     return;
+                } else {
+                    console.log('[DEBUG] No token found in KV');
                 }
             } catch (error) {
                 console.log('⚠️  Error loading tokens from Vercel KV:', error);
             }
-        } else {
-            console.log('[DEBUG] No KV Client available. Env vars:', {
-                url: !!process.env['KV_REST_API_URL'],
-                token: !!process.env['KV_REST_API_TOKEN']
-            });
         }
 
         // Fallback to file storage for local development
@@ -191,26 +211,17 @@ export class MercadoLibreAuth {
     }
 
     /**
-     * Synchronous wrapper for backwards compatibility
-     */
-    private loadTokens(): void {
-        // This will be called in constructor, but tokens will be loaded lazily
-        // when getToken() is called
-        this.loadTokensAsync().catch(err => {
-            console.log('⚠️  Error in async token loading:', err);
-        });
-    }
-
-    /**
      * Save tokens to Vercel KV (serverless) or file (local)
      */
     private async saveTokens(): Promise<void> {
-        // Try Vercel KV first
-        const kvClient = await getKV();
-        if (kvClient) {
+        // Try Vercel KV via REST API
+        if (process.env['KV_REST_API_URL']) {
             try {
-                await kvClient.set(TOKEN_KV_KEY, this.tokenData);
-                console.log('✅ Tokens saved to Vercel KV');
+                // Command: ["SET", "key", "value"]
+                // We stringify the token data to ensure safe storage
+                const value = JSON.stringify(this.tokenData);
+                await kvRestApi('POST', ['SET', TOKEN_KV_KEY, value]);
+                console.log('✅ Tokens saved to Vercel KV (REST)');
                 return;
             } catch (error) {
                 console.error('Error saving tokens to Vercel KV:', error);
