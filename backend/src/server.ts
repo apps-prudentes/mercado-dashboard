@@ -5,6 +5,7 @@ import cron from 'node-cron';
 import { mlAuth } from './auth/oauth';
 import ordersRouter from './routes/orders';
 import shipmentsRouter from './routes/shipments';
+import itemsRouter from './routes/items';
 
 // Load environment variables
 dotenv.config();
@@ -14,38 +15,38 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors({
-    origin: 'http://localhost:4200', // Angular dev server
-    credentials: true,
+  origin: 'http://localhost:4200', // Angular dev server
+  credentials: true,
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Health check endpoint
 app.get('/', (req: Request, res: Response) => {
-    res.json({
-        status: 'running',
-        message: 'MercadoLibre Dashboard Backend',
-        hasToken: mlAuth.hasValidToken(),
-    });
+  res.json({
+    status: 'running',
+    message: 'MercadoLibre Dashboard Backend',
+    hasToken: mlAuth.hasValidToken(),
+  });
 });
 
 // OAuth authorization endpoint
 app.get('/auth', (req: Request, res: Response) => {
-    const authUrl = mlAuth.getAuthorizationUrl();
-    res.redirect(authUrl);
+  const authUrl = mlAuth.getAuthorizationUrl();
+  res.redirect(authUrl);
 });
 
 // OAuth callback endpoint
 app.get('/callback', async (req: Request, res: Response) => {
-    const { code } = req.query;
+  const { code } = req.query;
 
-    if (!code || typeof code !== 'string') {
-        return res.status(400).send('Authorization code not found');
-    }
+  if (!code || typeof code !== 'string') {
+    return res.status(400).send('Authorization code not found');
+  }
 
-    try {
-        await mlAuth.getAccessToken(code);
-        res.send(`
+  try {
+    await mlAuth.getAccessToken(code);
+    res.send(`
       <html>
         <head>
           <style>
@@ -91,9 +92,9 @@ app.get('/callback', async (req: Request, res: Response) => {
         </body>
       </html>
     `);
-    } catch (error) {
-        console.error('Error in callback:', error);
-        res.status(500).send(`
+  } catch (error) {
+    console.error('Error in callback:', error);
+    res.status(500).send(`
       <html>
         <head>
           <style>
@@ -127,45 +128,46 @@ app.get('/callback', async (req: Request, res: Response) => {
         </body>
       </html>
     `);
-    }
+  }
 });
 
 // API Routes
+app.use('/api/items', itemsRouter);
 app.use('/api/orders', ordersRouter);
 app.use('/api/shipments', shipmentsRouter);
 
 // Schedule token refresh every hour
 cron.schedule('0 * * * *', async () => {
-    console.log('🔄 Running scheduled token refresh check...');
-    if (mlAuth.hasValidToken() && mlAuth.isTokenExpired()) {
-        try {
-            await mlAuth.refreshAccessToken();
-            console.log('✅ Token refreshed successfully');
-        } catch (error) {
-            console.error('❌ Error refreshing token:', error);
-        }
+  console.log('🔄 Running scheduled token refresh check...');
+  if (mlAuth.hasValidToken() && mlAuth.isTokenExpired()) {
+    try {
+      await mlAuth.refreshAccessToken();
+      console.log('✅ Token refreshed successfully');
+    } catch (error) {
+      console.error('❌ Error refreshing token:', error);
     }
+  }
 });
 
 // Error handling middleware
 app.use((err: any, req: Request, res: Response, next: any) => {
-    console.error('Unhandled error:', err);
-    res.status(500).json({
-        error: 'Internal server error',
-        message: err.message,
-    });
+  console.error('Unhandled error:', err);
+  res.status(500).json({
+    error: 'Internal server error',
+    message: err.message,
+  });
 });
 
 // Start server
 app.listen(PORT, () => {
-    console.log('\n🚀 MercadoLibre Dashboard Backend Server');
-    console.log(`📡 Server running on http://localhost:${PORT}`);
-    console.log(`🔐 CORS enabled for: http://localhost:4200\n`);
+  console.log('\n🚀 MercadoLibre Dashboard Backend Server');
+  console.log(`📡 Server running on http://localhost:${PORT}`);
+  console.log(`🔐 CORS enabled for: http://localhost:4200\n`);
 
-    if (!mlAuth.hasValidToken()) {
-        console.log('⚠️  No valid token found!');
-        console.log(`🔑 Please authorize the app by visiting: http://localhost:${PORT}/auth\n`);
-    } else {
-        console.log('✅ Valid token found. Ready to serve requests!\n');
-    }
+  if (!mlAuth.hasValidToken()) {
+    console.log('⚠️  No valid token found!');
+    console.log(`🔑 Please authorize the app by visiting: http://localhost:${PORT}/auth\n`);
+  } else {
+    console.log('✅ Valid token found. Ready to serve requests!\n');
+  }
 });

@@ -4,6 +4,21 @@ import * as path from 'path';
 import { TokenData } from '../types';
 
 const TOKEN_FILE = path.join(__dirname, '../../tokens.json');
+const TOKEN_KV_KEY = 'meli_oauth_token';
+
+// Lazy load Vercel KV to avoid import errors in non-Vercel environments
+let kv: any = null;
+const getKV = async () => {
+    if (!kv && process.env['KV_REST_API_URL'] && process.env['KV_REST_API_TOKEN']) {
+        try {
+            const { kv: kvClient } = await import('@vercel/kv');
+            kv = kvClient;
+        } catch (error) {
+            console.log('⚠️  Vercel KV not available, using file storage');
+        }
+    }
+    return kv;
+};
 
 export class MercadoLibreAuth {
     private appId: string;
@@ -20,10 +35,10 @@ export class MercadoLibreAuth {
 
     /**
      * Generate authorization URL for OAuth 2.0 flow
-     * Includes 'write' scope for creating/editing products
+     * Includes 'offline_access' and 'write' scopes for creating/editing products
      */
     getAuthorizationUrl(): string {
-        return `https://auth.mercadolibre.com.mx/authorization?response_type=code&client_id=${this.appId}&redirect_uri=${this.redirectUri}&scope=write`;
+        return `https://auth.mercadolibre.com.mx/authorization?response_type=code&client_id=${this.appId}&redirect_uri=${this.redirectUri}&scope=offline_access write`;
     }
 
     /**
@@ -100,6 +115,11 @@ export class MercadoLibreAuth {
      * Get current access token, refreshing if necessary
      */
     async getToken(): Promise<string> {
+        // Ensure tokens are loaded
+        if (!this.tokenData) {
+            await this.loadTokensAsync();
+        }
+
         if (!this.tokenData) {
             throw new Error('No token available. Please authorize the app first.');
         }
@@ -127,39 +147,73 @@ export class MercadoLibreAuth {
     }
 
     /**
-     * Load tokens from file (only in local environment)
+     * Load tokens from Vercel KV (serverless) or file (local)
      */
-    private loadTokens(): void {
-        if (this.isServerless()) {
-            console.log('📦 Running in serverless environment - tokens will be stored in memory only');
-            return;
+    private async loadTokensAsync(): Promise<void> {
+        // Try Vercel KV first
+        const kvClient = await getKV();
+        if (kvClient) {
+            try {
+                const data = await kvClient.get(TOKEN_KV_KEY);
+                if (data) {
+                    this.tokenData = data as TokenData;
+                    console.log('✅ Tokens loaded from Vercel KV');
+                    return;
+                }
+            } catch (error) {
+                console.log('⚠️  Error loading tokens from Vercel KV:', error);
+            }
         }
 
-        try {
-            if (fs.existsSync(TOKEN_FILE)) {
-                const data = fs.readFileSync(TOKEN_FILE, 'utf-8');
-                this.tokenData = JSON.parse(data);
-                console.log('✅ Tokens loaded from file');
+        // Fallback to file storage for local development
+        if (!this.isServerless()) {
+            try {
+                if (fs.existsSync(TOKEN_FILE)) {
+                    const data = fs.readFileSync(TOKEN_FILE, 'utf-8');
+                    this.tokenData = JSON.parse(data);
+                    console.log('✅ Tokens loaded from file');
+                }
+            } catch (error) {
+                console.log('⚠️  No existing tokens found or error loading tokens');
             }
-        } catch (error) {
-            console.log('⚠️  No existing tokens found or error loading tokens');
         }
     }
 
     /**
-     * Save tokens to file (only in local environment)
+     * Synchronous wrapper for backwards compatibility
      */
-    private saveTokens(): void {
-        if (this.isServerless()) {
-            console.log('📦 Serverless environment - tokens stored in memory (not persisted)');
-            return;
+    private loadTokens(): void {
+        // This will be called in constructor, but tokens will be loaded lazily
+        // when getToken() is called
+        this.loadTokensAsync().catch(err => {
+            console.log('⚠️  Error in async token loading:', err);
+        });
+    }
+
+    /**
+     * Save tokens to Vercel KV (serverless) or file (local)
+     */
+    private async saveTokens(): Promise<void> {
+        // Try Vercel KV first
+        const kvClient = await getKV();
+        if (kvClient) {
+            try {
+                await kvClient.set(TOKEN_KV_KEY, this.tokenData);
+                console.log('✅ Tokens saved to Vercel KV');
+                return;
+            } catch (error) {
+                console.error('Error saving tokens to Vercel KV:', error);
+            }
         }
 
-        try {
-            fs.writeFileSync(TOKEN_FILE, JSON.stringify(this.tokenData, null, 2));
-            console.log('✅ Tokens saved to file');
-        } catch (error) {
-            console.error('Error saving tokens:', error);
+        // Fallback to file storage for local development
+        if (!this.isServerless()) {
+            try {
+                fs.writeFileSync(TOKEN_FILE, JSON.stringify(this.tokenData, null, 2));
+                console.log('✅ Tokens saved to file');
+            } catch (error) {
+                console.error('Error saving tokens:', error);
+            }
         }
     }
 }
