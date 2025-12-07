@@ -4,6 +4,7 @@ import { GridOptions, RowModelType } from 'ag-grid-community';
 import { DatePipe } from '@angular/common';
 import { Order } from '../interfaces/Order.interface';
 import { ValueFormatterParams } from 'ag-grid-community';
+import { environment } from '../../environments/environment';
 
 
 
@@ -30,7 +31,7 @@ export class DashboardComponent implements OnInit {
 
 
   constructor(private http: HttpClient, private datePipe: DatePipe) {
-    
+
     this.columnDefs = [
       {
         headerName: 'Order ID',
@@ -46,8 +47,8 @@ export class DashboardComponent implements OnInit {
         sortable: true,
         editable: true,
         // Usa valueFormatter para mostrar la fecha en el formato deseado
-        valueFormatter: (params:ValueFormatterParams) => this.datePipe.transform(params.value, 'dd/MM/yyyy, HH:mm'),
-      },      
+        valueFormatter: (params: ValueFormatterParams) => this.datePipe.transform(params.value, 'dd/MM/yyyy, HH:mm'),
+      },
       {
         headerName: 'Header Product',
         field: 'item',
@@ -90,11 +91,11 @@ export class DashboardComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.http.get<Order[]>('http://localhost:3000/api/orders').subscribe(
+    this.http.get<Order[]>(`${environment.apiUrl}/orders`).subscribe(
       (response: Order[]) => {
         // Primero, filtramos los pedidos para quedarnos solo con aquellos cumplidos
         const fulfilledOrders = response.filter(order => order.fulfilled);
-  
+
         // Luego, mapeamos esos pedidos a la estructura deseada
         this.rowData = fulfilledOrders.map(order => ({
           id: order.id,
@@ -113,9 +114,9 @@ export class DashboardComponent implements OnInit {
       }
     );
   }
-  
-  
-  
+
+
+
 
   formatCurrency(params: any) {
     return `$${params.value.toFixed(2)}`;
