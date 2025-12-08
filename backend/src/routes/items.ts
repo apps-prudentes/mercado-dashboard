@@ -75,6 +75,8 @@ router.post('/', async (req: Request, res: Response) => {
         });
     } catch (error: any) {
         console.error('Error creating item:', error.response?.data || error.message);
+        console.error('Error Status:', error.response?.status);
+        console.error('Error Headers:', error.response?.headers);
 
         if (error.message?.includes('No token available')) {
             res.status(401).json({
