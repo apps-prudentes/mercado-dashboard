@@ -71,7 +71,9 @@ export class MercadoLibreAuth {
      */
     getAuthorizationUrl(): string {
         const scopes = ['offline_access', 'read', 'write'].join(' ');
-        return `https://auth.mercadolibre.com.mx/authorization?response_type=code&client_id=${this.appId}&redirect_uri=${this.redirectUri}&scope=${scopes}`;
+        const encodedScopes = encodeURIComponent(scopes);
+        const encodedRedirectUri = encodeURIComponent(this.redirectUri);
+        return `https://auth.mercadolibre.com.mx/authorization?response_type=code&client_id=${this.appId}&redirect_uri=${encodedRedirectUri}&scope=${encodedScopes}`;
     }
 
     /**
@@ -95,6 +97,7 @@ export class MercadoLibreAuth {
 
             await this.saveTokens();
             console.log('✅ Access token obtained successfully');
+            console.log('🔍 Granted Scopes:', this.tokenData?.scope); // Debug log
             return this.tokenData!;
         } catch (error: any) {
             console.error('Error getting access token:', error.response?.data || error.message);
