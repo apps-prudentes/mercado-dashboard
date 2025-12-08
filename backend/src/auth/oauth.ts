@@ -67,9 +67,12 @@ export class MercadoLibreAuth {
 
     /**
      * Generate authorization URL for OAuth 2.0 flow
-     * Includes 'offline_access', 'read' and 'write' scopes
+     * Includes scopes for: offline access, read data, and write/publish items
      */
     getAuthorizationUrl(): string {
+        // offline_access: to get refresh tokens
+        // read: to read orders, shipments, user data
+        // write: to create/update/delete items (publications)
         const scopes = ['offline_access', 'read', 'write'].join(' ');
         const encodedScopes = encodeURIComponent(scopes);
         const encodedRedirectUri = encodeURIComponent(this.redirectUri);

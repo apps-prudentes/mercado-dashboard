@@ -31,6 +31,7 @@ router.post('/', async (req: Request, res: Response) => {
 
         // Get valid access token
         const token = await mlAuth.getToken();
+        console.log('🔑 Using token to create item (length):', token.length);
 
         // Prepare item data for MercadoLibre API
         const itemData: any = {
@@ -74,14 +75,25 @@ router.post('/', async (req: Request, res: Response) => {
             message: 'Product published successfully',
         });
     } catch (error: any) {
-        console.error('Error creating item:', error.response?.data || error.message);
-        console.error('Error Status:', error.response?.status);
-        console.error('Error Headers:', error.response?.headers);
+        console.error('❌ Error creating item:', error.response?.data || error.message);
+        console.error('📊 Error Status:', error.response?.status);
+        console.error('📋 Full error response:', JSON.stringify(error.response?.data, null, 2));
 
         if (error.message?.includes('No token available')) {
             res.status(401).json({
                 error: 'Not authorized',
-                message: 'Please authorize the app first by visiting /auth',
+                message: 'Please authorize the app first by visiting /api/auth',
+            });
+            return;
+        }
+
+        // Check for scope errors
+        if (error.response?.data?.message?.includes('scopes') ||
+            error.response?.data?.error?.includes('scopes')) {
+            res.status(403).json({
+                error: 'Unauthorized scopes',
+                message: 'Your app does not have permission to create items. Please re-authorize by visiting /api/auth',
+                details: error.response.data,
             });
             return;
         }
