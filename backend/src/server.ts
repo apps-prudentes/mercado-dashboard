@@ -35,6 +35,23 @@ app.get('/auth', (req: Request, res: Response) => {
   res.redirect(authUrl);
 });
 
+// Clear token endpoint (for re-authorization)
+app.post('/auth/clear', async (req: Request, res: Response) => {
+  try {
+    await mlAuth.clearTokens();
+    res.json({
+      success: true,
+      message: 'Token cleared successfully. Please re-authorize by visiting /auth'
+    });
+  } catch (error) {
+    console.error('Error clearing token:', error);
+    res.status(500).json({
+      error: 'Failed to clear token',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 // OAuth callback endpoint
 app.get('/callback', async (req: Request, res: Response) => {
   const { code } = req.query;
@@ -68,10 +85,10 @@ app.get('/callback', async (req: Request, res: Response) => {
             }
             h1 { color: #333; margin-bottom: 10px; }
             p { color: #666; margin-bottom: 20px; }
-            .scopes { 
-                background: #f0f0f0; 
-                padding: 10px; 
-                border-radius: 5px; 
+            .scopes {
+                background: #f0f0f0;
+                padding: 10px;
+                border-radius: 5px;
                 font-family: monospace;
                 margin: 20px 0;
                 word-break: break-all;
