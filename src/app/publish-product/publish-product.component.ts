@@ -11,17 +11,29 @@ import { Router } from '@angular/router';
 export class PublishProductComponent {
 
   product = {
-    title: 'Cable USB-C Premium 2 metros',
-    category_id: 'MLM1051', // Default: Computación > Accesorios
-    price: 199.99,
-    available_quantity: 10,
-    condition: 'new',
-    pictures: '', // Dejar vacío por ahora para probar sin imágenes
-    description: 'Cable USB-C de alta calidad con trenzado de nylon. Perfecto para carga rápida y transferencia de datos. Compatible con la mayoría de dispositivos móviles modernos.',
-    listing_type_id: 'free', // free, bronze, silver, gold_special, gold_premium
-    warranty_type: 'Garantía del vendedor',
-    warranty_time: '6 meses'
-  };
+    "title": "Producto de Prueba",
+    "category_id": "MLM1051",
+    "price": 100,
+    "available_quantity": 1,
+    "condition": "new",
+    "currency_id": "MXN",
+    "buying_mode": "buy_it_now",
+    "listing_type_id": "free"
+  }
+
+
+  // {
+  //   title: 'Cable USB-C Premium 2 metros',
+  //   category_id: 'MLM1051', // Default: Computación > Accesorios
+  //   price: 199.99,
+  //   available_quantity: 10,
+  //   condition: 'new',
+  //   pictures: '', // Dejar vacío por ahora para probar sin imágenes
+  //   description: 'Cable USB-C de alta calidad con trenzado de nylon. Perfecto para carga rápida y transferencia de datos. Compatible con la mayoría de dispositivos móviles modernos.',
+  //   listing_type_id: 'free', // free, bronze, silver, gold_special, gold_premium
+  //   warranty_type: 'Garantía del vendedor',
+  //   warranty_time: '6 meses'
+  // };
 
   categories = [
     { id: 'MLM1051', name: 'Computación > Accesorios' },
