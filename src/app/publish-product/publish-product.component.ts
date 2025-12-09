@@ -16,7 +16,7 @@ export class PublishProductComponent {
     price: 199.99,
     available_quantity: 10,
     condition: 'new',
-    pictures: 'https://http2.mlstatic.com/D_NQ_NP_2X_123456-MLM12345678901-012023-F.webp\nhttps://http2.mlstatic.com/D_NQ_NP_2X_654321-MLM12345678902-012023-F.webp',
+    pictures: '', // Dejar vacío por ahora para probar sin imágenes
     description: 'Cable USB-C de alta calidad con trenzado de nylon. Perfecto para carga rápida y transferencia de datos. Compatible con la mayoría de dispositivos móviles modernos.',
     listing_type_id: 'free', // free, bronze, silver, gold_special, gold_premium
     warranty_type: 'Garantía del vendedor',
@@ -109,7 +109,7 @@ export class PublishProductComponent {
       price: 199.99,
       available_quantity: 10,
       condition: 'new',
-      pictures: 'https://http2.mlstatic.com/D_NQ_NP_2X_123456-MLM12345678901-012023-F.webp\nhttps://http2.mlstatic.com/D_NQ_NP_2X_654321-MLM12345678902-012023-F.webp',
+      pictures: '', // Dejar vacío por ahora para probar sin imágenes
       description: 'Cable USB-C de alta calidad con trenzado de nylon. Perfecto para carga rápida y transferencia de datos. Compatible con la mayoría de dispositivos móviles modernos.',
       listing_type_id: 'free',
       warranty_type: 'Garantía del vendedor',
