@@ -266,6 +266,36 @@ export class MercadoLibreAuth {
             }
         }
     }
+
+    /**
+     * Clear tokens from storage (for re-authorization)
+     */
+    async clearTokens(): Promise<void> {
+        this.tokenData = null;
+
+        // Clear from Vercel KV via REST API
+        if (process.env['KV_REST_API_URL']) {
+            try {
+                // Command: ["DEL", "key"]
+                await kvRestApi('POST', ['DEL', TOKEN_KV_KEY]);
+                console.log('✅ Tokens cleared from Vercel KV');
+            } catch (error) {
+                console.error('Error clearing tokens from Vercel KV:', error);
+            }
+        }
+
+        // Clear from file storage for local development
+        if (!this.isServerless()) {
+            try {
+                if (fs.existsSync(TOKEN_FILE)) {
+                    fs.unlinkSync(TOKEN_FILE);
+                    console.log('✅ Tokens cleared from file');
+                }
+            } catch (error) {
+                console.error('Error clearing tokens from file:', error);
+            }
+        }
+    }
 }
 
 export const mlAuth = new MercadoLibreAuth();
