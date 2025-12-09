@@ -70,19 +70,14 @@ export class MercadoLibreAuth {
      * Includes scopes for: offline access, read data, and write/publish items
      */
     getAuthorizationUrl(): string {
+        // MercadoLibre only supports 3 scopes:
         // offline_access: to get refresh tokens
-        // read, write: generic scopes (legacy/fallback)
-        // items.read, items.write: granular scopes for items
-        // orders.read: granular scope for orders
-        // shipments.read: granular scope for shipments
+        // read: allows GET operations (read orders, items, shipments, etc.)
+        // write: allows POST, PUT, DELETE operations (create/update/delete items, etc.)
         const scopes = [
             'offline_access',
             'read',
-            'write',
-            'items.read',
-            'items.write',
-            'orders.read',
-            'shipments.read'
+            'write'
         ].join(' ');
         const encodedScopes = encodeURIComponent(scopes);
         const encodedRedirectUri = encodeURIComponent(this.redirectUri);
