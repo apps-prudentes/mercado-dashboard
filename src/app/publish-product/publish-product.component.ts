@@ -119,16 +119,17 @@ export class PublishProductComponent {
 
   resetForm(): void {
     this.product = {
-      title: 'Cable USB-C Premium 2 metros',
-      category_id: 'MLM1051',
-      price: 199.99,
-      available_quantity: 10,
-      condition: 'new',
-      pictures: '', // Dejar vacío por ahora para probar sin imágenes
-      description: 'Cable USB-C de alta calidad con trenzado de nylon. Perfecto para carga rápida y transferencia de datos. Compatible con la mayoría de dispositivos móviles modernos.',
-      listing_type_id: 'free',
-      warranty_type: 'Garantía del vendedor',
-      warranty_time: '6 meses'
+      title: "Libro de Prueba - Edicion 2024",
+      category_id: "MLM1953",
+      price: 100,
+      available_quantity: 1,
+      condition: "new",
+      listing_type_id: "free",
+      pictures: "",
+      description: "Libro de prueba para testing",
+      warranty_type: "",
+      warranty_time: "",
+      family_name: "Libro de Prueba"
     };
     this.successMessage = '';
     this.errorMessage = '';
