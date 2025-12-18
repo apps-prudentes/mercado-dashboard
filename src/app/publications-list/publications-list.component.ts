@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { MatDialog } from '@angular/material/dialog';
 import { environment } from '../../environments/environment';
 
 interface Publication {
@@ -29,8 +28,7 @@ export class PublicationsListComponent implements OnInit {
 
   constructor(
     private http: HttpClient,
-    private router: Router,
-    public dialog: MatDialog
+    private router: Router
   ) {}
 
   ngOnInit(): void {
