@@ -197,6 +197,18 @@ export class PublishProductComponent implements OnInit {
     if (duplicateData) {
       const item = JSON.parse(duplicateData);
 
+      console.log('📋 Duplicating item:', item);
+
+      // Map pictures from ML format to form format
+      // ML pictures have: {id, url, secure_url, size, ...}
+      // Form expects: {source: "url"}
+      let mappedPictures: Picture[] = [];
+      if (item.pictures && Array.isArray(item.pictures)) {
+        mappedPictures = item.pictures.map((pic: any) => ({
+          source: pic.secure_url || pic.url || pic.source
+        }));
+      }
+
       // Pre-fill form with item data
       this.product = {
         family_name: item.title + ' (Copia)',
@@ -208,7 +220,7 @@ export class PublishProductComponent implements OnInit {
         condition: item.condition,
         listing_type_id: item.listing_type_id,
         sale_terms: item.sale_terms || [],
-        pictures: item.pictures || [],
+        pictures: mappedPictures,
         attributes: item.attributes || [],
         shipping: item.shipping || {}
       };
@@ -216,16 +228,20 @@ export class PublishProductComponent implements OnInit {
       // Update category selector
       this.selectedCategoryId = item.category_id;
 
-      // Convert pictures to text for form
+      // Convert pictures to text for form display
       if (this.product.pictures && this.product.pictures.length > 0) {
         this.picturesText = this.product.pictures.map(p => p.source).join('\n');
+      } else {
+        this.picturesText = '';
       }
 
       // Clear sessionStorage
       sessionStorage.removeItem('duplicateItem');
 
-      console.log('📋 Loaded duplicate item:', this.product);
+      console.log('✅ Product form loaded with:', this.product);
+      console.log('📸 Pictures text:', this.picturesText);
     } else {
+      console.warn('⚠️ No duplicate data found in sessionStorage');
       // If no data found, load default template
       this.loadCategoryTemplate(this.selectedCategoryId);
     }
