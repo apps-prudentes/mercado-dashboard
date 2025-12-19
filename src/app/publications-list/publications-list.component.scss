@@ -16,6 +16,208 @@
   }
 }
 
+// Filters Card
+.filters-card {
+  margin-bottom: 2rem;
+
+  .filters-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid hsl(var(--border));
+
+    mat-icon {
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+      color: hsl(var(--primary));
+    }
+
+    h3 {
+      flex: 1;
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: hsl(var(--foreground));
+      margin: 0;
+    }
+
+    .btn-clear-filters {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.5rem 1rem;
+      background-color: hsl(var(--muted));
+      color: hsl(var(--foreground));
+      border: none;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+        color: inherit;
+      }
+
+      &:hover {
+        background-color: hsl(var(--muted) / 0.8);
+      }
+    }
+  }
+
+  .filters-body {
+    .search-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .filter-group {
+      .filter-label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: hsl(var(--foreground));
+        margin-bottom: 0.5rem;
+      }
+
+      .search-input-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        .search-icon {
+          position: absolute;
+          left: 1rem;
+          font-size: 20px;
+          width: 20px;
+          height: 20px;
+          color: hsl(var(--muted-foreground));
+          pointer-events: none;
+        }
+
+        .search-input {
+          flex: 1;
+          padding: 0.75rem 1rem 0.75rem 3rem;
+          border: 1px solid hsl(var(--border));
+          border-radius: 6px;
+          background-color: hsl(var(--card));
+          color: hsl(var(--foreground));
+          font-size: 0.9375rem;
+          transition: all 0.2s;
+
+          &:focus {
+            outline: none;
+            border-color: hsl(var(--primary));
+            box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1);
+          }
+
+          &::placeholder {
+            color: hsl(var(--muted-foreground));
+          }
+        }
+
+        .btn-clear-search {
+          position: absolute;
+          right: 130px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 28px;
+          height: 28px;
+          background: none;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+          color: hsl(var(--muted-foreground));
+          transition: all 0.2s;
+
+          mat-icon {
+            font-size: 18px;
+            width: 18px;
+            height: 18px;
+          }
+
+          &:hover {
+            background-color: hsl(var(--muted));
+            color: hsl(var(--foreground));
+          }
+        }
+
+        .btn-search {
+          padding: 0.75rem 1.5rem;
+          background-color: hsl(var(--primary));
+          color: white;
+          border: none;
+          border-radius: 6px;
+          font-size: 0.9375rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s;
+          white-space: nowrap;
+
+          &:hover {
+            background-color: hsl(var(--primary) / 0.9);
+          }
+
+          &:active {
+            transform: scale(0.98);
+          }
+        }
+      }
+    }
+
+    .filters-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+
+      .filter-select {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid hsl(var(--border));
+        border-radius: 6px;
+        background-color: hsl(var(--card));
+        color: hsl(var(--foreground));
+        font-size: 0.9375rem;
+        cursor: pointer;
+        transition: all 0.2s;
+
+        &:focus {
+          outline: none;
+          border-color: hsl(var(--primary));
+          box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1);
+        }
+
+        &:hover {
+          border-color: hsl(var(--primary) / 0.5);
+        }
+      }
+    }
+  }
+
+  .results-summary {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid hsl(var(--border));
+    font-size: 0.9375rem;
+    color: hsl(var(--muted-foreground));
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+  }
+}
+
 // Table Card
 .table-card {
   .table-header {
@@ -224,10 +426,14 @@
   }
 
   &.btn-duplicate {
+    background-color: hsl(var(--primary));
+    color: white;
+    border-color: hsl(var(--primary));
+
     &:hover:not(:disabled) {
-      background-color: hsl(var(--primary) / 0.1);
+      background-color: hsl(var(--primary) / 0.9);
       border-color: hsl(var(--primary));
-      color: hsl(var(--primary));
+      color: white;
     }
   }
 
@@ -343,5 +549,72 @@
         display: inline;
       }
     }
+  }
+
+  .filters-card {
+    .filters-row {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+// Pagination Section
+.pagination-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 2rem 1rem;
+  border-top: 1px solid hsl(var(--border));
+
+  .btn-load-more {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.875rem 2rem;
+    background-color: hsl(var(--primary));
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-width: 200px;
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+
+    .btn-spinner {
+      ::ng-deep circle {
+        stroke: white;
+      }
+    }
+
+    &:hover:not(:disabled) {
+      background-color: hsl(var(--primary) / 0.9);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px hsl(var(--primary) / 0.3);
+    }
+
+    &:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  .pagination-info {
+    font-size: 0.875rem;
+    color: hsl(var(--muted-foreground));
+    margin: 0;
+    text-align: center;
   }
 }

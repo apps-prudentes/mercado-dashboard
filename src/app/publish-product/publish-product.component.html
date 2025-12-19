@@ -85,9 +85,10 @@
                    name="family_name"
                    [(ngModel)]="product.family_name"
                    required
+                   maxlength="60"
                    placeholder="Ej: Transistor NPN 2N3055">
             <small class="form-hint">
-              MercadoLibre generará automáticamente el título basado en este nombre y los atributos
+              MercadoLibre generará automáticamente el título basado en este nombre y los atributos (máx. 60 caracteres)
             </small>
           </div>
 

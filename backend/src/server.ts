@@ -7,6 +7,7 @@ import { mlAuth } from './auth/oauth';
 import ordersRouter from './routes/orders';
 import shipmentsRouter from './routes/shipments';
 import itemsRouter from './routes/items';
+import imagesRouter from './routes/images';
 
 // Environment variables are now loaded by the first import
 
@@ -247,6 +248,7 @@ app.get('/callback', async (req: Request, res: Response) => {
 app.use('/api/items', itemsRouter);
 app.use('/api/orders', ordersRouter);
 app.use('/api/shipments', shipmentsRouter);
+app.use('/api/images', imagesRouter);
 
 // Schedule token refresh every hour
 cron.schedule('0 * * * *', async () => {

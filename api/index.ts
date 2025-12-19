@@ -6,6 +6,7 @@ import { mlAuth } from '../backend/src/auth/oauth';
 import ordersRouter from '../backend/src/routes/orders';
 import shipmentsRouter from '../backend/src/routes/shipments';
 import itemsRouter from '../backend/src/routes/items';
+import imagesRouter from '../backend/src/routes/images';
 
 // Load environment variables
 dotenv.config();
@@ -242,6 +243,7 @@ app.post('/api/auth/inject-token', async (req, res) => {
 app.use('/api/orders', ordersRouter);
 app.use('/api/shipments', shipmentsRouter);
 app.use('/api/items', itemsRouter);
+app.use('/api/images', imagesRouter);
 
 // Error handling middleware
 app.use((err: any, req: any, res: any, next: any) => {
