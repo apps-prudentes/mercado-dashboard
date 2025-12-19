@@ -197,11 +197,27 @@ router.post('/', async (req: Request, res: Response) => {
 
 /**
  * GET /api/items
- * List all user's MercadoLibre items
+ * List all user's MercadoLibre items with filters, search and pagination
+ *
+ * Query params:
+ * - offset: pagination offset (default: 0)
+ * - limit: items per page (default: 50, max: 100)
+ * - status: filter by status (active, paused, closed, etc.)
+ * - listing_type: filter by listing type (gold_pro, gold_special, etc.)
+ * - q: search query (filters items by title on frontend)
+ * - sort: sort order (price_asc, price_desc, date_asc, date_desc, title_asc, title_desc)
  */
 router.get('/', async (req: Request, res: Response) => {
     try {
         const token = await mlAuth.getToken();
+
+        // Extract query parameters
+        const offset = parseInt(req.query.offset as string) || 0;
+        const limit = Math.min(parseInt(req.query.limit as string) || 50, 100); // Max 100
+        const status = req.query.status as string;
+        const listingType = req.query.listing_type as string;
+        const searchQuery = (req.query.q as string || '').toLowerCase();
+        const sortBy = req.query.sort as string;
 
         // Step 1: Get seller ID
         const userResponse = await axios.get('https://api.mercadolibre.com/users/me', {
@@ -210,55 +226,136 @@ router.get('/', async (req: Request, res: Response) => {
         const sellerId = userResponse.data.id;
 
         console.log('📦 Fetching items for seller:', sellerId);
+        console.log('  - Offset:', offset);
+        console.log('  - Limit:', limit);
+        console.log('  - Status filter:', status || 'all');
+        console.log('  - Listing type filter:', listingType || 'all');
+        console.log('  - Search query:', searchQuery || 'none');
+        console.log('  - Sort by:', sortBy || 'default');
 
-        // Step 2: Get items list
+        // Step 2: Build params for ML API
+        const mlParams: any = {
+            offset,
+            limit
+        };
+
+        if (status) {
+            mlParams.status = status;
+        }
+
+        if (listingType) {
+            mlParams.listing_type_id = listingType;
+        }
+
+        // Step 3: Get items list
         const itemsResponse = await axios.get(
             `https://api.mercadolibre.com/users/${sellerId}/items/search`,
             {
                 headers: { Authorization: `Bearer ${token}` },
-                params: {
-                    offset: req.query.offset || 0,
-                    limit: req.query.limit || 20,
-                    status: req.query.status // optional: active, paused, closed
-                }
+                params: mlParams
             }
         );
 
         const itemIds = itemsResponse.data.results;
 
-        console.log(`✅ Found ${itemIds.length} items`);
+        console.log(`✅ Found ${itemIds.length} items (total: ${itemsResponse.data.paging.total})`);
 
         if (itemIds.length === 0) {
             return res.json({
                 items: [],
-                paging: itemsResponse.data.paging
+                paging: itemsResponse.data.paging,
+                filters: {
+                    status: status || null,
+                    listing_type: listingType || null,
+                    search: searchQuery || null,
+                    sort: sortBy || null
+                }
             });
         }
 
-        // Step 3: Fetch detailed info for each item (ML allows multi-get)
-        const detailsResponse = await axios.get(
-            `https://api.mercadolibre.com/items?ids=${itemIds.join(',')}`,
-            { headers: { Authorization: `Bearer ${token}` } }
-        );
+        // Step 4: Fetch detailed info for items (ML allows up to 20 at once)
+        // If more than 20, split into batches
+        const batchSize = 20;
+        const batches = [];
 
-        // Step 4: Transform data for frontend
-        const items = detailsResponse.data.map((item: any) => ({
-            id: item.body.id,
-            title: item.body.title,
-            price: item.body.price,
-            available_quantity: item.body.available_quantity,
-            status: item.body.status,
-            thumbnail: item.body.thumbnail || item.body.pictures?.[0]?.url || null,
-            listing_type_id: item.body.listing_type_id,
-            condition: item.body.condition,
-            permalink: item.body.permalink,
-            // Include full data for duplicate feature
-            fullData: item.body
-        }));
+        for (let i = 0; i < itemIds.length; i += batchSize) {
+            const batchIds = itemIds.slice(i, i + batchSize);
+            batches.push(batchIds);
+        }
+
+        const allItems = [];
+
+        for (const batchIds of batches) {
+            const detailsResponse = await axios.get(
+                `https://api.mercadolibre.com/items?ids=${batchIds.join(',')}`,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            const batchItems = detailsResponse.data
+                .filter((item: any) => item.code === 200) // Only successful responses
+                .map((item: any) => ({
+                    id: item.body.id,
+                    title: item.body.title,
+                    price: item.body.price,
+                    available_quantity: item.body.available_quantity,
+                    status: item.body.status,
+                    thumbnail: item.body.thumbnail || item.body.pictures?.[0]?.url || null,
+                    listing_type_id: item.body.listing_type_id,
+                    condition: item.body.condition,
+                    permalink: item.body.permalink,
+                    date_created: item.body.date_created,
+                    last_updated: item.body.last_updated,
+                    // Include full data for duplicate feature
+                    fullData: item.body
+                }));
+
+            allItems.push(...batchItems);
+        }
+
+        // Step 5: Apply frontend filters (search by title)
+        let filteredItems = allItems;
+
+        if (searchQuery) {
+            filteredItems = allItems.filter(item =>
+                item.title.toLowerCase().includes(searchQuery)
+            );
+        }
+
+        // Step 6: Apply sorting
+        if (sortBy) {
+            filteredItems.sort((a, b) => {
+                switch (sortBy) {
+                    case 'price_asc':
+                        return a.price - b.price;
+                    case 'price_desc':
+                        return b.price - a.price;
+                    case 'date_asc':
+                        return new Date(a.date_created).getTime() - new Date(b.date_created).getTime();
+                    case 'date_desc':
+                        return new Date(b.date_created).getTime() - new Date(a.date_created).getTime();
+                    case 'title_asc':
+                        return a.title.localeCompare(b.title);
+                    case 'title_desc':
+                        return b.title.localeCompare(a.title);
+                    case 'stock_asc':
+                        return a.available_quantity - b.available_quantity;
+                    case 'stock_desc':
+                        return b.available_quantity - a.available_quantity;
+                    default:
+                        return 0;
+                }
+            });
+        }
 
         res.json({
-            items,
-            paging: itemsResponse.data.paging
+            items: filteredItems,
+            paging: itemsResponse.data.paging,
+            filters: {
+                status: status || null,
+                listing_type: listingType || null,
+                search: searchQuery || null,
+                sort: sortBy || null
+            }
         });
 
     } catch (error: any) {

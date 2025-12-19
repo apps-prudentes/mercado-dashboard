@@ -29,6 +29,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { SidebarComponent } from './layout/sidebar.component';
 import { TopNavComponent } from './layout/top-nav.component';
 import { LayoutComponent } from './layout/layout.component';
+import { ImageGalleryComponent } from './image-gallery/image-gallery.component';
 
 @NgModule({
   declarations: [
@@ -42,6 +43,7 @@ import { LayoutComponent } from './layout/layout.component';
     SidebarComponent,
     TopNavComponent,
     LayoutComponent,
+    ImageGalleryComponent,
   ],
   imports: [
     BrowserModule,

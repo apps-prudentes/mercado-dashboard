@@ -39,6 +39,11 @@ export class SidebarComponent {
       label: 'Publicaciones',
       icon: 'list_alt',
       route: '/publications'
+    },
+    {
+      label: 'Galería',
+      icon: 'collections',
+      route: '/gallery'
     }
   ];
 

@@ -4,15 +4,95 @@
   <p class="page-description">Gestiona tus productos publicados en MercadoLibre</p>
 </div>
 
-<!-- Table Card -->
-<div class="card table-card">
-  <div class="table-header">
-    <div>
-      <h3 class="table-title">Lista de Publicaciones</h3>
-      <p class="table-subtitle">{{ dataSource.length }} publicaciones encontradas</p>
+<!-- Filters and Search Card -->
+<div class="card filters-card">
+  <div class="filters-header">
+    <mat-icon>filter_list</mat-icon>
+    <h3>Filtros y Búsqueda</h3>
+    <button *ngIf="hasActiveFilters()" class="btn-clear-filters" (click)="clearFilters()">
+      <mat-icon>clear_all</mat-icon>
+      Limpiar filtros
+    </button>
+  </div>
+
+  <div class="filters-body">
+    <!-- Search Bar -->
+    <div class="filter-group search-group">
+      <label class="filter-label">Buscar</label>
+      <div class="search-input-wrapper">
+        <mat-icon class="search-icon">search</mat-icon>
+        <input
+          type="text"
+          class="search-input"
+          [(ngModel)]="searchQuery"
+          (keyup.enter)="onSearch()"
+          placeholder="Buscar por título...">
+        <button *ngIf="searchQuery" class="btn-clear-search" (click)="clearSearch()">
+          <mat-icon>close</mat-icon>
+        </button>
+        <button class="btn-search" (click)="onSearch()">
+          Buscar
+        </button>
+      </div>
+    </div>
+
+    <!-- Filter Controls -->
+    <div class="filters-row">
+      <!-- Status Filter -->
+      <div class="filter-group">
+        <label class="filter-label" for="statusFilter">Estado</label>
+        <select
+          id="statusFilter"
+          class="filter-select"
+          [(ngModel)]="statusFilter"
+          (change)="onStatusFilterChange()">
+          <option *ngFor="let option of statusOptions" [value]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Listing Type Filter -->
+      <div class="filter-group">
+        <label class="filter-label" for="listingTypeFilter">Tipo de Publicación</label>
+        <select
+          id="listingTypeFilter"
+          class="filter-select"
+          [(ngModel)]="listingTypeFilter"
+          (change)="onListingTypeFilterChange()">
+          <option *ngFor="let option of listingTypeOptions" [value]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Sort -->
+      <div class="filter-group">
+        <label class="filter-label" for="sortFilter">Ordenar por</label>
+        <select
+          id="sortFilter"
+          class="filter-select"
+          [(ngModel)]="sortBy"
+          (change)="onSortChange()">
+          <option *ngFor="let option of sortOptions" [value]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
     </div>
   </div>
 
+  <!-- Results Summary -->
+  <div class="results-summary" *ngIf="!isLoading">
+    <mat-icon>inventory</mat-icon>
+    <span>
+      Mostrando {{ dataSource.length }} de {{ totalItems }} publicaciones
+    </span>
+  </div>
+</div>
+
+<!-- Table Card -->
+<div class="card table-card">
   <div class="table-container">
     <mat-spinner *ngIf="isLoading" diameter="50" class="table-spinner"></mat-spinner>
 
@@ -113,7 +193,29 @@
     <div *ngIf="!isLoading && dataSource.length === 0" class="no-data">
       <mat-icon class="no-data-icon">inventory_2</mat-icon>
       <p class="no-data-text">No hay publicaciones para mostrar</p>
-      <p class="no-data-hint">Crea tu primera publicación para comenzar</p>
+      <p class="no-data-hint" *ngIf="hasActiveFilters()">
+        Intenta ajustar tus filtros de búsqueda
+      </p>
+      <p class="no-data-hint" *ngIf="!hasActiveFilters()">
+        Crea tu primera publicación para comenzar
+      </p>
     </div>
+  </div>
+
+  <!-- Load More Button -->
+  <div class="pagination-section" *ngIf="!isLoading && dataSource.length > 0">
+    <button
+      *ngIf="hasMore"
+      class="btn-load-more"
+      (click)="loadMore()"
+      [disabled]="isLoadingMore">
+      <mat-spinner *ngIf="isLoadingMore" diameter="20" class="btn-spinner"></mat-spinner>
+      <mat-icon *ngIf="!isLoadingMore">expand_more</mat-icon>
+      {{ isLoadingMore ? 'Cargando...' : 'Cargar más publicaciones' }}
+    </button>
+
+    <p class="pagination-info" *ngIf="!hasMore && totalItems > pageSize">
+      Has visto todas las publicaciones ({{ totalItems }} total)
+    </p>
   </div>
 </div>

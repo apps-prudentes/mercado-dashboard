@@ -1,0 +1,144 @@
+<!-- Page Header -->
+<div class="page-header">
+  <h1 class="page-title">Galería de Imágenes</h1>
+  <p class="page-description">Sube y gestiona tus imágenes en el CDN de MercadoLibre</p>
+</div>
+
+<!-- Success Message -->
+<div *ngIf="successMessage" class="alert alert-success">
+  <mat-icon class="alert-icon">check_circle</mat-icon>
+  <span>{{ successMessage }}</span>
+  <button type="button" class="alert-close" (click)="clearMessages()">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
+
+<!-- Error Message -->
+<div *ngIf="errorMessage" class="alert alert-error">
+  <mat-icon class="alert-icon">error</mat-icon>
+  <span>{{ errorMessage }}</span>
+  <button type="button" class="alert-close" (click)="clearMessages()">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
+
+<!-- Upload Area Card -->
+<div class="card upload-card">
+  <div class="upload-header">
+    <mat-icon class="upload-icon">cloud_upload</mat-icon>
+    <h3 class="upload-title">Subir Nueva Imagen</h3>
+    <p class="upload-subtitle">Arrastra archivos aquí o haz clic para seleccionar</p>
+  </div>
+
+  <div class="upload-area"
+       [class.dragging]="isDragging"
+       [class.loading]="isLoading"
+       (dragover)="onDragOver($event)"
+       (dragleave)="onDragLeave($event)"
+       (drop)="onDrop($event)"
+       (click)="fileInput.click()">
+
+    <div class="upload-content">
+      <mat-icon class="upload-cloud-icon">cloud_upload</mat-icon>
+      <p class="upload-text">
+        <span class="upload-primary-text">Arrastra y suelta imágenes aquí</span>
+        <span class="upload-secondary-text">o haz clic para seleccionar archivos</span>
+      </p>
+      <p class="upload-formats">Formatos soportados: JPG, PNG, GIF, WEBP</p>
+    </div>
+
+    <input #fileInput
+           type="file"
+           class="upload-input"
+           accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+           multiple
+           (change)="onFileSelect($event)">
+
+    <div *ngIf="isLoading" class="upload-progress">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p class="upload-progress-text">Subiendo imagen...</p>
+    </div>
+  </div>
+</div>
+
+<!-- Gallery Grid -->
+<div class="card gallery-card">
+  <div class="gallery-header">
+    <div class="gallery-header-content">
+      <mat-icon class="gallery-icon">collections</mat-icon>
+      <div>
+        <h3 class="gallery-title">Mis Imágenes</h3>
+        <p class="gallery-subtitle">{{ images.length }} imagen{{ images.length !== 1 ? 'es' : '' }} en la galería</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="gallery-grid" *ngIf="images.length > 0">
+    <div *ngFor="let image of images" class="gallery-item">
+      <div class="image-container">
+        <img [src]="image.thumbnailUrl"
+             [alt]="image.id"
+             class="gallery-image"
+             (error)="$any($event.target).src='assets/no-image.png'">
+
+        <div class="image-overlay">
+          <button class="overlay-btn btn-view"
+                  (click)="copyUrl(image.fullSizeUrl, 'full')"
+                  matTooltip="Copiar URL completa">
+            <mat-icon>link</mat-icon>
+          </button>
+          <button class="overlay-btn btn-thumb"
+                  (click)="copyUrl(image.thumbnailUrl, 'thumbnail')"
+                  matTooltip="Copiar URL miniatura">
+            <mat-icon>photo_size_select_small</mat-icon>
+          </button>
+          <button class="overlay-btn btn-delete"
+                  (click)="deleteImage(image.id)"
+                  matTooltip="Eliminar de galería">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+
+        <div class="image-status" [class.active]="image.status === 'ACTIVE'">
+          {{ image.status }}
+        </div>
+      </div>
+
+      <div class="image-info">
+        <p class="image-id">{{ image.id }}</p>
+        <div class="image-urls">
+          <button class="url-btn" (click)="copyUrl(image.fullSizeUrl, 'full')">
+            <mat-icon>content_copy</mat-icon>
+            <span>URL Completa</span>
+          </button>
+          <button class="url-btn" (click)="copyUrl(image.thumbnailUrl, 'thumbnail')">
+            <mat-icon>content_copy</mat-icon>
+            <span>Miniatura</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="images.length === 0" class="gallery-empty">
+    <mat-icon class="empty-icon">image</mat-icon>
+    <p class="empty-text">No hay imágenes en la galería</p>
+    <p class="empty-hint">Sube tu primera imagen para comenzar</p>
+  </div>
+</div>
+
+<!-- Info Card -->
+<div class="card info-card">
+  <div class="info-header">
+    <mat-icon>info</mat-icon>
+    <h4>Información</h4>
+  </div>
+  <ul class="info-list">
+    <li>Las imágenes se suben al CDN de MercadoLibre y se almacenan de forma permanente</li>
+    <li>Puedes copiar las URLs para usar en tus publicaciones</li>
+    <li>Se generan múltiples tamaños automáticamente para diferentes usos</li>
+    <li>Las imágenes en la galería se guardan localmente para tu referencia</li>
+    <li>Formatos soportados: JPG, PNG, GIF, WEBP</li>
+  </ul>
+</div>
