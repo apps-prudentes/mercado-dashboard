@@ -81,6 +81,61 @@
 }
 
 /* ==========================================
+   DARK MODE THEME
+   ========================================== */
+
+body.dark-theme {
+  /* Background Colors */
+  --background: 222.2 84% 4.9%;              /* Dark background */
+  --foreground: 210 40% 98%;                 /* Light text */
+
+  /* Primary Colors */
+  --primary: 217 91% 60%;                    /* Brighter blue for dark mode */
+  --primary-foreground: 222.2 47.4% 11.2%;  /* Dark text on primary */
+
+  /* Secondary Colors */
+  --secondary: 217.2 32.6% 17.5%;            /* Dark gray */
+  --secondary-foreground: 210 40% 98%;       /* Light text */
+
+  /* Accent Colors */
+  --accent: 217.2 32.6% 17.5%;
+  --accent-foreground: 210 40% 98%;
+
+  /* Muted Colors */
+  --muted: 217.2 32.6% 17.5%;                /* Dark muted background */
+  --muted-foreground: 215 20.2% 65.1%;      /* Lighter muted text */
+
+  /* Destructive/Error */
+  --destructive: 0 62.8% 30.6%;              /* Darker red */
+  --destructive-foreground: 210 40% 98%;
+
+  /* Border & Ring */
+  --border: 217.2 32.6% 17.5%;               /* Dark border */
+  --input: 217.2 32.6% 17.5%;
+  --ring: 212.7 26.8% 83.9%;
+
+  /* Card */
+  --card: 222.2 84% 4.9%;                    /* Dark card background */
+  --card-foreground: 210 40% 98%;
+
+  /* Popover */
+  --popover: 222.2 84% 4.9%;
+  --popover-foreground: 210 40% 98%;
+
+  /* Success/Positive */
+  --success: 142 76% 36%;                    /* Keep same green */
+  --success-light: 142 76% 15%;              /* Darker success background */
+
+  /* Warning */
+  --warning: 38 92% 50%;                     /* Keep same orange */
+  --warning-light: 38 92% 15%;               /* Darker warning background */
+
+  /* Info */
+  --info: 217 91% 60%;                       /* Keep same blue */
+  --info-light: 217 91% 15%;                 /* Darker info background */
+}
+
+/* ==========================================
    DARK MODE VARIABLES
    ========================================== */
 
@@ -534,3 +589,29 @@ tbody tr:hover {
 .shadow-md { box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); }
 
 .transition { transition: all 0.2s ease; }
+
+/* ==========================================
+   TOAST NOTIFICATIONS (Custom Component with Flowbite Style)
+   ========================================== */
+
+.mat-mdc-snack-bar-container {
+  // Remove default Material styles
+  --mdc-snackbar-container-color: transparent;
+  --mat-snack-bar-button-color: inherit;
+  --mdc-snackbar-supporting-text-color: inherit;
+
+  .mdc-snackbar__surface {
+    background-color: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+
+  .mat-mdc-snack-bar-label {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  @media (max-width: 640px) {
+    margin: 8px;
+  }
+}

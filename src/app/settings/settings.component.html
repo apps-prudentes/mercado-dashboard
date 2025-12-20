@@ -1,0 +1,80 @@
+<!-- Page Header -->
+<div class="page-header">
+  <h1 class="page-title">Configuración</h1>
+  <p class="page-description">Personaliza la apariencia y el comportamiento de la aplicación</p>
+</div>
+
+<!-- Appearance Settings Card -->
+<div class="card settings-card">
+  <div class="settings-header">
+    <mat-icon>palette</mat-icon>
+    <h2>Apariencia</h2>
+  </div>
+
+  <div class="settings-section">
+    <div class="setting-item">
+      <div class="setting-info">
+        <h3 class="setting-title">Tema de la aplicación</h3>
+        <p class="setting-description">Elige entre el modo claro o oscuro</p>
+      </div>
+
+      <div class="theme-toggle-wrapper">
+        <!-- Light/Dark Toggle Buttons -->
+        <div class="theme-buttons">
+          <button
+            class="theme-btn"
+            [class.active]="currentTheme === 'light'"
+            (click)="setTheme('light')"
+            matTooltip="Modo Claro">
+            <mat-icon>light_mode</mat-icon>
+            <span>Claro</span>
+          </button>
+
+          <button
+            class="theme-btn"
+            [class.active]="currentTheme === 'dark'"
+            (click)="setTheme('dark')"
+            matTooltip="Modo Oscuro">
+            <mat-icon>dark_mode</mat-icon>
+            <span>Oscuro</span>
+          </button>
+        </div>
+
+        <!-- Toggle Switch -->
+        <div class="theme-toggle">
+          <span class="toggle-label">{{ isDarkMode ? 'Oscuro' : 'Claro' }}</span>
+          <label class="toggle-switch">
+            <input
+              type="checkbox"
+              [checked]="isDarkMode"
+              (change)="toggleTheme()">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Preview Card -->
+<div class="card preview-card">
+  <div class="preview-header">
+    <mat-icon>visibility</mat-icon>
+    <h3>Vista Previa</h3>
+  </div>
+
+  <div class="preview-content">
+    <div class="preview-text">
+      <p>Este es un ejemplo de cómo se verá el texto en el tema actual.</p>
+      <div class="preview-buttons">
+        <button class="preview-btn preview-btn-primary">Botón Primario</button>
+        <button class="preview-btn preview-btn-secondary">Botón Secundario</button>
+      </div>
+    </div>
+
+    <div class="preview-card-demo">
+      <h4>Card de Ejemplo</h4>
+      <p>Este es el contenido de una card con el tema actual aplicado.</p>
+    </div>
+  </div>
+</div>

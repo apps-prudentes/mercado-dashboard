@@ -44,6 +44,11 @@ export class SidebarComponent {
       label: 'Galería',
       icon: 'collections',
       route: '/gallery'
+    },
+    {
+      label: 'Configuración',
+      icon: 'settings',
+      route: '/settings'
     }
   ];
 

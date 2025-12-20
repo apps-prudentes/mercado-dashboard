@@ -22,7 +22,17 @@
   </button>
 </div>
 
-<!-- Upload Area Card -->
+<!-- Tabs Container -->
+<mat-tab-group [(selectedIndex)]="selectedTabIndex" (selectedIndexChange)="onTabChange($event)" class="gallery-tabs">
+
+  <!-- Tab 1: Upload New Images -->
+  <mat-tab label="Subir Nuevas">
+    <ng-template mat-tab-label>
+      <mat-icon class="tab-icon">cloud_upload</mat-icon>
+      Subir Nuevas
+    </ng-template>
+
+    <!-- Upload Area Card -->
 <div class="card upload-card">
   <div class="upload-header">
     <mat-icon class="upload-icon">cloud_upload</mat-icon>
@@ -128,17 +138,168 @@
   </div>
 </div>
 
-<!-- Info Card -->
-<div class="card info-card">
-  <div class="info-header">
-    <mat-icon>info</mat-icon>
-    <h4>Información</h4>
-  </div>
-  <ul class="info-list">
-    <li>Las imágenes se suben al CDN de MercadoLibre y se almacenan de forma permanente</li>
-    <li>Puedes copiar las URLs para usar en tus publicaciones</li>
-    <li>Se generan múltiples tamaños automáticamente para diferentes usos</li>
-    <li>Las imágenes en la galería se guardan localmente para tu referencia</li>
-    <li>Formatos soportados: JPG, PNG, GIF, WEBP</li>
-  </ul>
-</div>
+    <!-- Info Card -->
+    <div class="card info-card">
+      <div class="info-header">
+        <mat-icon>info</mat-icon>
+        <h4>Información</h4>
+      </div>
+      <ul class="info-list">
+        <li>Las imágenes se suben al CDN de MercadoLibre y se almacenan de forma permanente</li>
+        <li>Puedes copiar las URLs para usar en tus publicaciones</li>
+        <li>Se generan múltiples tamaños automáticamente para diferentes usos</li>
+        <li>Las imágenes en la galería se guardan localmente para tu referencia</li>
+        <li>Formatos soportados: JPG, PNG, GIF, WEBP</li>
+      </ul>
+    </div>
+
+  </mat-tab>
+
+  <!-- Tab 2: Catalog -->
+  <mat-tab label="Catálogo Completo">
+    <ng-template mat-tab-label>
+      <mat-icon class="tab-icon">photo_library</mat-icon>
+      Catálogo Completo
+      <span *ngIf="catalogImages.length > 0" class="tab-badge">{{ catalogImages.length }}</span>
+    </ng-template>
+
+    <!-- Catalog Filters Card -->
+    <div class="card catalog-filters-card">
+      <div class="filters-header">
+        <div class="filters-header-content">
+          <mat-icon>filter_list</mat-icon>
+          <h3>Filtros</h3>
+        </div>
+        <div class="filters-actions">
+          <button *ngIf="catalogSearchQuery || catalogStatusFilter"
+                  class="btn-clear-filters"
+                  (click)="clearCatalogFilters()">
+            <mat-icon>clear_all</mat-icon>
+            Limpiar filtros
+          </button>
+          <button class="btn-refresh"
+                  [disabled]="isCatalogLoading"
+                  (click)="fetchCatalog(true)">
+            <mat-icon [class.spinning]="isCatalogLoading">refresh</mat-icon>
+            Actualizar
+          </button>
+        </div>
+      </div>
+
+      <div class="filters-body">
+        <!-- Search Bar -->
+        <div class="filter-group">
+          <label class="filter-label">Buscar por publicación</label>
+          <div class="search-input-wrapper">
+            <mat-icon class="search-icon">search</mat-icon>
+            <input type="text"
+                   class="search-input"
+                   [(ngModel)]="catalogSearchQuery"
+                   (ngModelChange)="applyFilters()"
+                   placeholder="Buscar por título o ID...">
+            <button *ngIf="catalogSearchQuery"
+                    class="btn-clear-search"
+                    (click)="catalogSearchQuery = ''; applyFilters()">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+        </div>
+
+        <!-- Status Filter -->
+        <div class="filter-group">
+          <label class="filter-label">Estado de publicación</label>
+          <select class="filter-select"
+                  [(ngModel)]="catalogStatusFilter"
+                  (change)="applyFilters()">
+            <option *ngFor="let option of statusOptions" [value]="option.value">
+              {{ option.label }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Results Summary -->
+      <div class="results-summary" *ngIf="!isCatalogLoading">
+        <mat-icon>photo_library</mat-icon>
+        <span>
+          Mostrando {{ filteredCatalogImages.length }} de {{ catalogImages.length }} imágenes
+        </span>
+        <span *ngIf="catalogLastRefresh" class="last-refresh">
+          · Actualizado {{ catalogLastRefresh | date:'short' }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Catalog Grid -->
+    <div class="card catalog-grid-card">
+      <mat-spinner *ngIf="isCatalogLoading" diameter="50" class="catalog-spinner"></mat-spinner>
+
+      <div *ngIf="!isCatalogLoading && filteredCatalogImages.length > 0" class="catalog-grid">
+        <div *ngFor="let image of filteredCatalogImages" class="catalog-item">
+          <div class="catalog-image-container">
+            <img [src]="image.thumbnail_url"
+                 [alt]="image.source_item.title"
+                 class="catalog-image"
+                 (error)="$any($event.target).src='assets/no-image.png'">
+
+            <div class="catalog-overlay">
+              <button class="overlay-btn btn-copy-full"
+                      (click)="copyCatalogUrl(image.full_url, 'full')"
+                      matTooltip="Copiar URL completa">
+                <mat-icon>link</mat-icon>
+              </button>
+              <button class="overlay-btn btn-copy-thumb"
+                      (click)="copyCatalogUrl(image.thumbnail_url, 'thumbnail')"
+                      matTooltip="Copiar URL miniatura">
+                <mat-icon>photo_size_select_small</mat-icon>
+              </button>
+              <button class="overlay-btn btn-view-item"
+                      (click)="viewSourceItem(image.source_item.id)"
+                      matTooltip="Ver publicación">
+                <mat-icon>open_in_new</mat-icon>
+              </button>
+            </div>
+          </div>
+
+          <div class="catalog-info">
+            <p class="catalog-item-title" [matTooltip]="image.source_item.title">
+              {{ image.source_item.title }}
+            </p>
+            <div class="catalog-meta">
+              <span class="status-badge" [ngClass]="getStatusClass(image.source_item.status)">
+                {{ getStatusLabel(image.source_item.status) }}
+              </span>
+              <span class="catalog-item-id">ID: {{ image.source_item.id }}</span>
+            </div>
+            <div class="catalog-actions">
+              <button class="action-btn" (click)="copyCatalogUrl(image.full_url, 'full')">
+                <mat-icon>content_copy</mat-icon>
+                <span>Copiar URL</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="!isCatalogLoading && catalogImages.length === 0" class="catalog-empty">
+        <mat-icon class="empty-icon">photo_library</mat-icon>
+        <p class="empty-text">No hay imágenes en el catálogo</p>
+        <p class="empty-hint">Haz clic en "Actualizar" para cargar las imágenes de tus publicaciones</p>
+        <button class="btn-load-catalog" (click)="fetchCatalog(true)">
+          <mat-icon>refresh</mat-icon>
+          Cargar Catálogo
+        </button>
+      </div>
+
+      <!-- No Results State -->
+      <div *ngIf="!isCatalogLoading && catalogImages.length > 0 && filteredCatalogImages.length === 0" class="catalog-empty">
+        <mat-icon class="empty-icon">search_off</mat-icon>
+        <p class="empty-text">No se encontraron imágenes</p>
+        <p class="empty-hint">Intenta ajustar tus filtros de búsqueda</p>
+      </div>
+    </div>
+
+  </mat-tab>
+
+</mat-tab-group>

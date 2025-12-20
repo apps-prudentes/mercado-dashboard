@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { Router, ActivatedRoute } from '@angular/router';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { ToastComponent } from '../shared/toast/toast.component';
 
 // Interfaces para el producto
 interface Attribute {
@@ -175,7 +177,8 @@ export class PublishProductComponent implements OnInit {
   constructor(
     private http: HttpClient,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private snackBar: MatSnackBar
   ) { }
 
   ngOnInit(): void {
@@ -306,7 +309,28 @@ export class PublishProductComponent implements OnInit {
     this.http.post(`${environment.apiUrl}/items`, productData).subscribe({
       next: (response: any) => {
         this.loading = false;
-        this.successMessage = `¡Producto publicado exitosamente! ID: ${response.item.id}`;
+        const mode = this.isDuplicateMode ? 'duplicado' : 'nuevo';
+        const message = `Producto ${mode} publicado exitosamente! ID: ${response.item.id}`;
+
+        this.successMessage = message;
+
+        // Show success toast with Flowbite style
+        this.snackBar.openFromComponent(ToastComponent, {
+          duration: 5000,
+          horizontalPosition: 'end',
+          verticalPosition: 'top',
+          data: {
+            message: message,
+            type: 'success',
+            action: {
+              label: 'Ver',
+              onClick: () => {
+                window.open(response.item.permalink, '_blank');
+              }
+            }
+          }
+        });
+
         console.log('✅ Product created:', response);
 
         // Reset form after 2 seconds
@@ -316,7 +340,23 @@ export class PublishProductComponent implements OnInit {
       },
       error: (error) => {
         this.loading = false;
-        this.errorMessage = error.error?.message || 'Error al publicar el producto';
+        const mode = this.isDuplicateMode ? 'duplicado' : 'nuevo';
+        const errorMsg = error.error?.message || 'Error al publicar el producto';
+        const message = `Error al publicar producto ${mode}: ${errorMsg}`;
+
+        this.errorMessage = message;
+
+        // Show error toast with Flowbite style
+        this.snackBar.openFromComponent(ToastComponent, {
+          duration: 7000,
+          horizontalPosition: 'end',
+          verticalPosition: 'top',
+          data: {
+            message: message,
+            type: 'error'
+          }
+        });
+
         console.error('❌ Error creating product:', error);
         console.error('Error details:', error.error);
       }
