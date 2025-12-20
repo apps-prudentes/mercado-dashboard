@@ -1,0 +1,39 @@
+<div class="toast-container" [ngClass]="'toast-' + data.type">
+  <!-- Icon -->
+  <div class="toast-icon">
+    <!-- Success Icon -->
+    <svg *ngIf="data.type === 'success'" class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 11.917 9.724 16.5 19 7.5"/>
+    </svg>
+
+    <!-- Error Icon -->
+    <svg *ngIf="data.type === 'error'" class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 17.94 6M18 18 6.06 6"/>
+    </svg>
+
+    <!-- Warning Icon -->
+    <svg *ngIf="data.type === 'warning'" class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 13V8m0 8h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+    </svg>
+
+    <!-- Info Icon -->
+    <svg *ngIf="data.type === 'info'" class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 11h2v5m-2 0h4m-2.592-8.5h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+    </svg>
+  </div>
+
+  <!-- Message -->
+  <div class="toast-message">{{ data.message }}</div>
+
+  <!-- Action Button (optional) -->
+  <button *ngIf="data.action" type="button" class="toast-action-btn" (click)="onAction(); $event.stopPropagation()">
+    {{ data.action.label }}
+  </button>
+
+  <!-- Close Button -->
+  <button type="button" class="toast-close-btn" (click)="close(); $event.stopPropagation()" aria-label="Close">
+    <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 17.94 6M18 18 6.06 6"/>
+    </svg>
+  </button>
+</div>

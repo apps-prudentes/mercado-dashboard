@@ -17,12 +17,26 @@ interface UploadedImage {
   status: string;
 }
 
+interface CatalogImage {
+  picture_id: string;
+  full_url: string;
+  thumbnail_url: string;
+  variations: any[];
+  source_item: {
+    id: string;
+    title: string;
+    status: string;
+  };
+  date_created: string;
+}
+
 @Component({
   selector: 'app-image-gallery',
   templateUrl: './image-gallery.component.html',
   styleUrls: ['./image-gallery.component.scss']
 })
 export class ImageGalleryComponent implements OnInit {
+  // Upload tab
   images: UploadedImage[] = [];
   isLoading = false;
   isDragging = false;
@@ -30,10 +44,28 @@ export class ImageGalleryComponent implements OnInit {
   errorMessage = '';
   successMessage = '';
 
+  // Catalog tab
+  selectedTabIndex = 0;
+  catalogImages: CatalogImage[] = [];
+  filteredCatalogImages: CatalogImage[] = [];
+  isCatalogLoading = false;
+  catalogSearchQuery = '';
+  catalogStatusFilter = '';
+  catalogLastRefresh: Date | null = null;
+
+  // Filter options
+  statusOptions = [
+    { value: '', label: 'Todos los estados' },
+    { value: 'active', label: 'Activos' },
+    { value: 'paused', label: 'Pausados' },
+    { value: 'closed', label: 'Cerrados' }
+  ];
+
   constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
     this.loadImages();
+    this.loadCatalogFromCache();
   }
 
   /**
@@ -208,5 +240,148 @@ export class ImageGalleryComponent implements OnInit {
   clearMessages(): void {
     this.errorMessage = '';
     this.successMessage = '';
+  }
+
+  // ===== CATALOG METHODS =====
+
+  /**
+   * Load catalog from cache
+   */
+  loadCatalogFromCache(): void {
+    const cached = localStorage.getItem('mlImageCatalog');
+    const cacheTimestamp = localStorage.getItem('mlImageCatalogTimestamp');
+
+    if (cached && cacheTimestamp) {
+      this.catalogImages = JSON.parse(cached);
+      this.catalogLastRefresh = new Date(cacheTimestamp);
+      this.applyFilters();
+    }
+  }
+
+  /**
+   * Fetch catalog from backend
+   */
+  fetchCatalog(forceRefresh: boolean = false): void {
+    // Check if we have recent cache (less than 5 minutes old)
+    if (!forceRefresh && this.catalogLastRefresh) {
+      const cacheAge = Date.now() - this.catalogLastRefresh.getTime();
+      if (cacheAge < 5 * 60 * 1000) { // 5 minutes
+        this.successMessage = 'Usando catálogo en caché. Actualizado hace ' + Math.floor(cacheAge / 1000) + ' segundos';
+        setTimeout(() => this.successMessage = '', 3000);
+        return;
+      }
+    }
+
+    this.isCatalogLoading = true;
+    this.errorMessage = '';
+
+    this.http.get<{images: CatalogImage[], total: number, unique_images: number, total_items: number}>
+      (`${environment.apiUrl}/images/catalog`).subscribe({
+      next: (response) => {
+        this.catalogImages = response.images;
+        this.catalogLastRefresh = new Date();
+
+        // Save to cache
+        localStorage.setItem('mlImageCatalog', JSON.stringify(this.catalogImages));
+        localStorage.setItem('mlImageCatalogTimestamp', this.catalogLastRefresh.toISOString());
+
+        this.applyFilters();
+        this.isCatalogLoading = false;
+        this.successMessage = `Catálogo actualizado: ${response.unique_images} imágenes únicas de ${response.total_items} publicaciones`;
+        setTimeout(() => this.successMessage = '', 5000);
+      },
+      error: (error) => {
+        console.error('Error fetching catalog:', error);
+        this.errorMessage = error.error?.message || 'Error al cargar el catálogo de imágenes';
+        this.isCatalogLoading = false;
+      }
+    });
+  }
+
+  /**
+   * Handle tab change
+   */
+  onTabChange(index: number): void {
+    this.selectedTabIndex = index;
+
+    // Load catalog when switching to catalog tab for the first time
+    if (index === 1 && this.catalogImages.length === 0) {
+      this.fetchCatalog();
+    }
+  }
+
+  /**
+   * Apply filters to catalog
+   */
+  applyFilters(): void {
+    let filtered = [...this.catalogImages];
+
+    // Apply search filter
+    if (this.catalogSearchQuery.trim()) {
+      const query = this.catalogSearchQuery.toLowerCase();
+      filtered = filtered.filter(img =>
+        img.source_item.title.toLowerCase().includes(query) ||
+        img.source_item.id.toLowerCase().includes(query)
+      );
+    }
+
+    // Apply status filter
+    if (this.catalogStatusFilter) {
+      filtered = filtered.filter(img =>
+        img.source_item.status === this.catalogStatusFilter
+      );
+    }
+
+    this.filteredCatalogImages = filtered;
+  }
+
+  /**
+   * Clear catalog filters
+   */
+  clearCatalogFilters(): void {
+    this.catalogSearchQuery = '';
+    this.catalogStatusFilter = '';
+    this.applyFilters();
+  }
+
+  /**
+   * Copy catalog image URL
+   */
+  copyCatalogUrl(url: string, type: 'full' | 'thumbnail'): void {
+    navigator.clipboard.writeText(url).then(() => {
+      this.successMessage = `URL ${type === 'full' ? 'completa' : 'miniatura'} copiada al portapapeles!`;
+      setTimeout(() => this.successMessage = '', 2000);
+    }).catch(err => {
+      console.error('Error copying to clipboard:', err);
+      this.errorMessage = 'Error al copiar URL';
+    });
+  }
+
+  /**
+   * Get status badge class
+   */
+  getStatusClass(status: string): string {
+    return `status-${status.toLowerCase()}`;
+  }
+
+  /**
+   * Get status label
+   */
+  getStatusLabel(status: string): string {
+    const labels: any = {
+      'active': 'Activa',
+      'paused': 'Pausada',
+      'closed': 'Cerrada',
+      'under_review': 'En revisión',
+      'inactive': 'Inactiva'
+    };
+    return labels[status] || status;
+  }
+
+  /**
+   * View source item on MercadoLibre
+   */
+  viewSourceItem(itemId: string): void {
+    window.open(`https://articulo.mercadolibre.com.mx/${itemId}`, '_blank');
   }
 }

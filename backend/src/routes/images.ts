@@ -107,4 +107,176 @@ router.post('/upload', upload.single('file'), async (req: Request, res: Response
     }
 });
 
+/**
+ * GET /api/images/catalog
+ * Get all images from all user's publications
+ *
+ * This endpoint:
+ * 1. Fetches all user's items
+ * 2. Extracts all images from each item
+ * 3. Deduplicates by URL
+ * 4. Returns consolidated catalog with metadata
+ */
+router.get('/catalog', async (req: Request, res: Response) => {
+    try {
+        const token = await mlAuth.getToken();
+
+        console.log('🖼️  Fetching image catalog...');
+
+        // Step 1: Get seller ID
+        const userResponse = await axios.get('https://api.mercadolibre.com/users/me', {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        const sellerId = userResponse.data.id;
+
+        console.log('  - Seller ID:', sellerId);
+
+        // Step 2: Fetch ALL items in batches
+        const batchSize = 100; // ML API max limit
+        let currentOffset = 0;
+        let allItemIds: string[] = [];
+        let totalItems = 0;
+
+        // First request to get total count
+        const firstBatch = await axios.get(
+            `https://api.mercadolibre.com/users/${sellerId}/items/search`,
+            {
+                headers: { Authorization: `Bearer ${token}` },
+                params: { offset: 0, limit: batchSize }
+            }
+        );
+
+        totalItems = firstBatch.data.paging.total;
+        allItemIds.push(...firstBatch.data.results);
+        currentOffset += batchSize;
+
+        console.log(`  - Total items: ${totalItems}`);
+        console.log(`  - Fetched batch 1: ${firstBatch.data.results.length} items`);
+
+        // Fetch remaining batches
+        while (allItemIds.length < totalItems) {
+            const batchResponse = await axios.get(
+                `https://api.mercadolibre.com/users/${sellerId}/items/search`,
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                    params: { offset: currentOffset, limit: batchSize }
+                }
+            );
+
+            const batchIds = batchResponse.data.results;
+            allItemIds.push(...batchIds);
+
+            console.log(`  - Fetched batch ${Math.floor(currentOffset / batchSize) + 1}: ${batchIds.length} items (${allItemIds.length}/${totalItems})`);
+
+            if (batchIds.length < batchSize) {
+                break; // No more items
+            }
+
+            currentOffset += batchSize;
+        }
+
+        console.log(`  ✅ Fetched all ${allItemIds.length} item IDs`);
+
+        // Step 3: Fetch item details in batches of 20 (ML API limit for /items?ids=)
+        const detailBatchSize = 20;
+        const allItemsData: any[] = [];
+
+        for (let i = 0; i < allItemIds.length; i += detailBatchSize) {
+            const batchIds = allItemIds.slice(i, i + detailBatchSize);
+
+            const detailsResponse = await axios.get(
+                `https://api.mercadolibre.com/items?ids=${batchIds.join(',')}`,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            const successfulItems = detailsResponse.data
+                .filter((item: any) => item.code === 200)
+                .map((item: any) => item.body);
+
+            allItemsData.push(...successfulItems);
+
+            console.log(`  - Fetched details batch ${Math.floor(i / detailBatchSize) + 1}: ${successfulItems.length} items (${allItemsData.length}/${allItemIds.length})`);
+        }
+
+        console.log(`  ✅ Fetched details for ${allItemsData.length} items`);
+
+        // Step 4: Extract all images with metadata
+        interface CatalogImage {
+            picture_id: string;
+            full_url: string;
+            thumbnail_url: string;
+            variations: any[];
+            source_item: {
+                id: string;
+                title: string;
+                status: string;
+            };
+            date_created: string;
+        }
+
+        const imageMap = new Map<string, CatalogImage>(); // Use Map to deduplicate by URL
+
+        for (const item of allItemsData) {
+            if (item.pictures && Array.isArray(item.pictures)) {
+                for (const picture of item.pictures) {
+                    const fullUrl = picture.url || picture.secure_url;
+
+                    // Skip if already added (deduplicate)
+                    if (imageMap.has(fullUrl)) {
+                        continue;
+                    }
+
+                    // Find thumbnail variation (smallest size)
+                    const thumbnailVariation = picture.variations?.find((v: any) =>
+                        v.size === '500x500' || v.size === '250x250'
+                    ) || picture.variations?.[0];
+
+                    const catalogImage: CatalogImage = {
+                        picture_id: picture.id,
+                        full_url: fullUrl,
+                        thumbnail_url: thumbnailVariation?.secure_url || thumbnailVariation?.url || fullUrl,
+                        variations: picture.variations || [],
+                        source_item: {
+                            id: item.id,
+                            title: item.title,
+                            status: item.status
+                        },
+                        date_created: item.date_created
+                    };
+
+                    imageMap.set(fullUrl, catalogImage);
+                }
+            }
+        }
+
+        const images = Array.from(imageMap.values());
+
+        console.log(`  ✅ Extracted ${images.length} unique images from ${allItemsData.length} items`);
+
+        // Step 5: Return catalog
+        res.json({
+            images,
+            total: images.length,
+            unique_images: images.length,
+            total_items: allItemsData.length
+        });
+
+    } catch (error: any) {
+        console.error('❌ Error fetching image catalog:', error.response?.data || error.message);
+
+        if (error.response?.status === 401) {
+            res.status(401).json({
+                error: 'Unauthorized',
+                message: 'Access token is invalid or expired. Please re-authorize the app.'
+            });
+            return;
+        }
+
+        res.status(500).json({
+            error: 'Failed to fetch image catalog',
+            message: error.response?.data?.message || error.message
+        });
+    }
+});
+
 export default router;

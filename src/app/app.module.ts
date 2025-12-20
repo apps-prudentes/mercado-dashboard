@@ -26,10 +26,14 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatSelectModule } from '@angular/material/select';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { SidebarComponent } from './layout/sidebar.component';
 import { TopNavComponent } from './layout/top-nav.component';
 import { LayoutComponent } from './layout/layout.component';
 import { ImageGalleryComponent } from './image-gallery/image-gallery.component';
+import { ToastComponent } from './shared/toast/toast.component';
+import { SettingsComponent } from './settings/settings.component';
 
 @NgModule({
   declarations: [
@@ -44,6 +48,8 @@ import { ImageGalleryComponent } from './image-gallery/image-gallery.component';
     TopNavComponent,
     LayoutComponent,
     ImageGalleryComponent,
+    ToastComponent,
+    SettingsComponent,
   ],
   imports: [
     BrowserModule,
@@ -64,7 +70,9 @@ import { ImageGalleryComponent } from './image-gallery/image-gallery.component';
     MatIconModule,
     MatTooltipModule,
     MatBadgeModule,
-    MatSelectModule
+    MatSelectModule,
+    MatTabsModule,
+    MatSnackBarModule
   ],
   providers: [DatePipe],
   bootstrap: [AppComponent]

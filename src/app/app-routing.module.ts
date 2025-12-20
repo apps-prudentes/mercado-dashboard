@@ -5,6 +5,7 @@ import { BarChartComponent } from './bar-chart/bar-chart.component';
 import { PublishProductComponent } from './publish-product/publish-product.component';
 import { PublicationsListComponent } from './publications-list/publications-list.component';
 import { ImageGalleryComponent } from './image-gallery/image-gallery.component';
+import { SettingsComponent } from './settings/settings.component';
 
 // Define tus rutas aquí
 const routes: Routes = [
@@ -13,6 +14,7 @@ const routes: Routes = [
   { path: 'publish', component: PublishProductComponent },
   { path: 'publications', component: PublicationsListComponent },
   { path: 'gallery', component: ImageGalleryComponent },
+  { path: 'settings', component: SettingsComponent },
   { path: '', redirectTo: '/chart', pathMatch: 'full' },
   { path: '**', redirectTo: '/chart' }
 ];
