@@ -1,120 +1,80 @@
-import 'dotenv/config';
-import express, { Request, Response } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
+import dotenv from 'dotenv';
+import rateLimit from 'express-rate-limit';
+import helmet from 'helmet';
 import cron from 'node-cron';
 import axios from 'axios';
 import { mlAuth } from './auth/oauth';
+
+// Import our new auth middleware and service
+import { authMiddleware } from './middleware/auth';
+// import { appwriteService } from './auth/appwrite'; // Not directly used here, but good to have reference. Removing for now.
+
+// Import routes
 import ordersRouter from './routes/orders';
 import shipmentsRouter from './routes/shipments';
 import itemsRouter from './routes/items';
 import imagesRouter from './routes/images';
 
-// Environment variables are now loaded by the first import
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Security Middleware (Helmet and Rate Limiting)
+app.use(helmet());
+
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 100, // límite de 100 requests por IP
+  message: 'Too many requests from this IP, please try again later.'
+});
+
 // Middleware
 app.use(cors({
-  origin: 'http://localhost:4200', // Angular dev server
-  credentials: true,
+  origin: [
+    'http://localhost:4200',
+    'https://omargaxiola.com',
+    'https://mercado-libre-dashboard.vercel.app'
+  ],
+  credentials: true
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Health check endpoint
-app.get('/', (req: Request, res: Response) => {
+// ============================================
+// PUBLIC ROUTES (sin autenticación)
+// ============================================
+
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// ============================================
+// PROTECTED ROUTES (requieren autenticación)
+// ============================================
+
+// Aplicar middleware de autenticación a TODAS las rutas /api/*
+app.use('/api', apiLimiter, authMiddleware); // Apply rate limiter before auth
+
+// Montar routers protegidos
+app.use('/api/orders', ordersRouter);
+app.use('/api/shipments', shipmentsRouter);
+app.use('/api/items', itemsRouter);
+app.use('/api/images', imagesRouter);
+
+// Endpoint de validación de sesión
+app.get('/api/auth/session', (req, res) => {
   res.json({
-    status: 'running',
-    message: 'MercadoLibre Dashboard Backend',
-    hasToken: mlAuth.hasValidToken(),
+    user: (req as any).user,
+    authenticated: true
   });
 });
 
-// Debug endpoint to check current token scopes
-app.get('/debug/token', async (req: Request, res: Response) => {
-  try {
-    // Access the private tokenData property
-    await (mlAuth as any).loadTokensAsync?.() || Promise.resolve();
-    const tokenData = (mlAuth as any).tokenData;
-
-    if (!tokenData) {
-      return res.json({
-        hasToken: false,
-        message: 'No token found. Please authorize at /auth'
-      });
-    }
-
-    const scopesArray = tokenData.scope?.split(' ') || [];
-
-    // Print to console (like when publishing)
-    console.log('🔑 Token Debug Info (from /debug/token):');
-    console.log('  - Token length:', tokenData.access_token?.length || 0);
-    console.log('  - Full TOKEN:', tokenData.access_token);
-    console.log('  - Refresh Token:', tokenData.refresh_token);
-    console.log('  - Scopes granted:', tokenData.scope || 'NO SCOPES');
-    console.log('  - Has write scope:', scopesArray.includes('write'));
-
-    res.json({
-      hasToken: true,
-      access_token: tokenData.access_token, // NOW SHOWS THE FULL TOKEN
-      refresh_token: tokenData.refresh_token,
-      tokenLength: tokenData.access_token?.length || 0,
-      scopes: tokenData.scope || 'No scopes found',
-      scopesArray: scopesArray,
-      hasOfflineAccess: scopesArray.includes('offline_access'),
-      hasReadScope: scopesArray.includes('read'),
-      hasWriteScope: scopesArray.includes('write'),
-      tokenCreatedAt: tokenData.created_at ? new Date(tokenData.created_at).toISOString() : 'unknown',
-      isExpired: mlAuth.isTokenExpired(),
-      expiresIn: tokenData.expires_in
-    });
-  } catch (error: any) {
-    res.status(500).json({
-      error: 'Failed to get token info',
-      message: error.message
-    });
-  }
-});
-
-// Test endpoint - verify token works with MercadoLibre API
-app.get('/debug/test-token', async (req: Request, res: Response) => {
-  try {
-    const token = await mlAuth.getToken();
-
-    console.log('🔍 Testing token with ML API...');
-    console.log('Token length:', token.length);
-    console.log('Token (first 20 chars):', token.substring(0, 20) + '...');
-
-    // Test with a simple GET request to /users/me
-    const testResponse = await axios.get('https://api.mercadolibre.com/users/me', {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
-
-    console.log('✅ Token is valid!');
-    console.log('User ID:', testResponse.data.id);
-    console.log('User nickname:', testResponse.data.nickname);
-
-    res.json({
-      success: true,
-      message: 'Token is valid and working',
-      userId: testResponse.data.id,
-      nickname: testResponse.data.nickname,
-      siteId: testResponse.data.site_id,
-      tokenWorks: true
-    });
-  } catch (error: any) {
-    console.error('❌ Token test failed:', error.response?.data || error.message);
-    res.status(500).json({
-      success: false,
-      error: error.response?.data || error.message,
-      status: error.response?.status,
-      tokenWorks: false
-    });
-  }
-});
+// ============================================
+// PUBLIC ML AUTH ROUTES (Still needed)
+// ============================================
 
 // OAuth authorization endpoint
 app.get('/auth', (req: Request, res: Response) => {
@@ -244,12 +204,6 @@ app.get('/callback', async (req: Request, res: Response) => {
   }
 });
 
-// API Routes
-app.use('/api/items', itemsRouter);
-app.use('/api/orders', ordersRouter);
-app.use('/api/shipments', shipmentsRouter);
-app.use('/api/images', imagesRouter);
-
 // Schedule token refresh every hour
 cron.schedule('0 * * * *', async () => {
   console.log('🔄 Running scheduled token refresh check...');
@@ -263,25 +217,28 @@ cron.schedule('0 * * * *', async () => {
   }
 });
 
-// Error handling middleware
-app.use((err: any, req: Request, res: Response, next: any) => {
-  console.error('Unhandled error:', err);
+// ============================================
+// ERROR HANDLING
+// ============================================
+
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error('Error:', err);
   res.status(500).json({
     error: 'Internal server error',
-    message: err.message,
+    message: err.message
   });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log('\n🚀 MercadoLibre Dashboard Backend Server');
-  console.log(`📡 Server running on http://localhost:${PORT}`);
-  console.log(`🔐 CORS enabled for: http://localhost:4200\n`);
+// ============================================
+// START SERVER
+// ============================================
 
-  if (!mlAuth.hasValidToken()) {
-    console.log('⚠️  No valid token found!');
-    console.log(`🔑 Please authorize the app by visiting: http://localhost:${PORT}/auth\n`);
-  } else {
-    console.log('✅ Valid token found. Ready to serve requests!\n');
-  }
-});
+const PORT = process.env.PORT || 3000;
+
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
+
+export default app;
