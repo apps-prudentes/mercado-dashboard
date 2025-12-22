@@ -1,5 +1,6 @@
-import { Component, EventEmitter, Output } from '@angular/core';
-import { environment } from '../../environments/environment';
+import { Component, Output, EventEmitter } from '@angular/core';
+import { Router } from '@angular/router';
+import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-top-nav',
@@ -9,21 +10,17 @@ import { environment } from '../../environments/environment';
 export class TopNavComponent {
   @Output() menuToggle = new EventEmitter<void>();
 
-  searchQuery = '';
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) {}
 
   onMenuToggle() {
     this.menuToggle.emit();
   }
 
-  onSearch() {
-    if (this.searchQuery.trim()) {
-      console.log('Searching for:', this.searchQuery);
-      // Implementar lógica de búsqueda
-    }
-  }
-
-  loginWithMercadoLibre(): void {
-    // Redirect to backend OAuth endpoint
-    window.location.href = `${environment.apiUrl}/auth`;
+  async logout() {
+    await this.authService.logout();
+    this.router.navigate(['/login']);
   }
 }

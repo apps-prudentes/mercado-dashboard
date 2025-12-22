@@ -4,8 +4,10 @@ import { BrowserModule } from '@angular/platform-browser';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
-import { HttpClientModule } from '@angular/common/http';
+import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { AgGridModule } from 'ag-grid-angular';
+import { LoginComponent } from './auth/login/login.component';
+import { AuthInterceptor } from './interceptors/auth.interceptor';
 import { NavBarComponent } from './nav-bar/nav-bar.component';
 import { DatePipe } from '@angular/common';
 import { AgChartsAngularModule } from 'ag-charts-angular';
@@ -38,6 +40,7 @@ import { SettingsComponent } from './settings/settings.component';
 @NgModule({
   declarations: [
     AppComponent,
+    LoginComponent,
     DashboardComponent,
     NavBarComponent,
     BarChartComponent,
@@ -74,7 +77,14 @@ import { SettingsComponent } from './settings/settings.component';
     MatTabsModule,
     MatSnackBarModule
   ],
-  providers: [DatePipe],
+  providers: [
+    DatePipe,
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: AuthInterceptor,
+      multi: true
+    }
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
