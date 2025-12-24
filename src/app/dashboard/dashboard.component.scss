@@ -1,40 +1,83 @@
-// AG Grid Theme Overrides
+/* ==========================================
+   PAGE HEADER
+   ========================================== */
+.page-header {
+  margin-bottom: 1.5rem;
+}
+
+.page-title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: hsl(var(--foreground));
+  margin-bottom: 0.5rem;
+}
+
+.page-description {
+  font-size: 0.875rem;
+  color: hsl(var(--muted-foreground));
+}
+
+/* ==========================================
+   GRID CARD
+   ========================================== */
+.grid-card {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 200px); // Ajusta según la altura del header y padding
+  min-height: 600px;
+}
+
+.grid-header {
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.grid-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+  margin-bottom: 0.25rem;
+}
+
+.grid-subtitle {
+  font-size: 0.875rem;
+  color: hsl(var(--muted-foreground));
+}
+
+/* ==========================================
+   GRID CONTAINER
+   ========================================== */
+.grid-container {
+  flex: 1;
+  position: relative;
+  min-height: 500px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.grid-spinner {
+  color: hsl(var(--primary));
+}
+
+.grid-table {
+  width: 100%;
+  height: 100%;
+}
+
+/* ==========================================
+   AG GRID COMPONENT-SPECIFIC STYLES
+   ========================================== */
 ::ng-deep {
-  .ag-theme-alpine {
-    --ag-background-color: hsl(var(--card));
-    --ag-foreground-color: hsl(var(--foreground));
-    --ag-border-color: hsl(var(--border));
-    --ag-header-background-color: hsl(var(--muted));
-    --ag-header-foreground-color: hsl(var(--foreground));
-    --ag-odd-row-background-color: hsl(var(--card));
-    --ag-row-hover-color: hsl(var(--muted) / 0.5);
-    --ag-selected-row-background-color: hsl(var(--primary) / 0.1);
-    --ag-font-family: var(--font-sans);
-    --ag-font-size: 14px;
+  .ag-header-cell {
+    font-weight: 600;
+    padding: 1rem 0.75rem;
+  }
 
-    .ag-header {
-      border-bottom: 2px solid hsl(var(--border));
-    }
-
-    .ag-header-cell {
-      font-weight: 600;
-      padding: 1rem 0.75rem;
-    }
-
-    .ag-cell {
-      padding: 0.75rem;
-      line-height: 1.5;
-    }
-
-    .ag-row {
-      border-bottom: 1px solid hsl(var(--border));
-    }
-
-    .ag-paging-panel {
-      border-top: 2px solid hsl(var(--border));
-      padding: 1rem;
-      background-color: hsl(var(--muted) / 0.3);
-    }
+  .ag-cell {
+    padding: 0.75rem;
+    line-height: 1.5;
   }
 
   .ag-overlay-loading-center {

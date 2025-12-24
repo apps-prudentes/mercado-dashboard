@@ -8,6 +8,43 @@
 @import "ag-grid-community/styles/ag-theme-alpine.css";
 
 /* ==========================================
+   AG GRID THEME CUSTOMIZATION
+   ========================================== */
+
+/* Modo claro - texto negro y legible */
+.ag-theme-alpine {
+  --ag-background-color: #ffffff;
+  --ag-foreground-color: #000000;
+  --ag-border-color: #e0e0e0;
+  --ag-header-background-color: #f5f5f5;
+  --ag-header-foreground-color: #000000;
+  --ag-odd-row-background-color: #ffffff;
+  --ag-even-row-background-color: #fafafa;
+  --ag-row-hover-color: rgba(0, 0, 0, 0.04);
+  --ag-selected-row-background-color: rgba(33, 150, 243, 0.08);
+  --ag-browser-color-scheme: light;
+}
+
+/* Modo oscuro - tabla oscura siguiendo el tema de la app */
+body.dark-theme .ag-theme-alpine {
+  --ag-background-color: hsl(222.2 84% 4.9%);
+  --ag-foreground-color: hsl(210 40% 98%);
+  --ag-border-color: hsl(217.2 32.6% 17.5%);
+  --ag-header-background-color: hsl(217.2 32.6% 12%);
+  --ag-header-foreground-color: hsl(210 40% 98%);
+  --ag-odd-row-background-color: hsl(222.2 84% 4.9%);
+  --ag-even-row-background-color: hsl(217.2 32.6% 8%);
+  --ag-row-hover-color: hsl(217.2 32.6% 17.5% / 0.3);
+  --ag-selected-row-background-color: hsl(217 91% 60% / 0.15);
+  --ag-browser-color-scheme: dark;
+}
+
+/* Ocultar overlay de carga que estaba cubriendo la tabla */
+.ag-overlay-loading-wrapper {
+  display: none !important;
+}
+
+/* ==========================================
    CSS VARIABLES - COLOR PALETTE
    ========================================== */
 
