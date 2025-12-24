@@ -7,10 +7,15 @@ import { ThemeService, Theme } from '../services/theme.service';
   styleUrls: ['./settings.component.scss']
 })
 export class SettingsComponent implements OnInit {
-  currentTheme: Theme = 'light';
-  isDarkMode = false;
+  currentTheme: Theme;
+  isDarkMode: boolean;
 
-  constructor(private themeService: ThemeService) {}
+  constructor(private themeService: ThemeService) {
+    // Initialize with current theme to avoid flash/change on load
+    const current = this.themeService.getCurrentTheme();
+    this.currentTheme = current;
+    this.isDarkMode = current === 'dark';
+  }
 
   ngOnInit(): void {
     // Subscribe to theme changes
