@@ -1,5 +1,5 @@
 {
-    "extends": "./tsconfig.json",
+    "extends": "../tsconfig.json",
     "compilerOptions": {
         "target": "ES2020",
         "module": "commonjs",
@@ -13,7 +13,10 @@
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,
         "resolveJsonModule": true,
-        "outDir": "./dist/api"
+        "outDir": "./dist/api",
+        "noImplicitReturns": false,
+        "typeRoots": ["../node_modules/@types", "../backend/src/types"],
+        "types": ["node", "express", "multer"]
     },
     "include": [
         "api/**/*",

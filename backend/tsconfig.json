@@ -7,7 +7,7 @@
         ],
         "outDir": "./dist",
         "rootDir": "./src",
-        "strict": true,
+        "strict": false,
         "esModuleInterop": true,
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,
@@ -15,7 +15,9 @@
         "moduleResolution": "node",
         "declaration": true,
         "declarationMap": true,
-        "sourceMap": true
+        "sourceMap": true,
+        "typeRoots": ["./node_modules/@types", "./src/types"],
+        "types": ["node", "express", "multer"]
     },
     "include": [
         "src/**/*"

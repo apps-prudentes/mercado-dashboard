@@ -33,7 +33,8 @@ const upload = multer({
  */
 router.post('/upload', upload.single('file'), async (req: Request, res: Response) => {
     try {
-        if (!req.file) {
+        const file = (req as any).file;
+        if (!file) {
             res.status(400).json({
                 error: 'No file uploaded',
                 message: 'Please provide an image file'
@@ -45,15 +46,15 @@ router.post('/upload', upload.single('file'), async (req: Request, res: Response
         const token = await mlAuth.getToken();
 
         console.log('📸 Uploading image to ML CDN...');
-        console.log('  - File name:', req.file.originalname);
-        console.log('  - File size:', (req.file.size / 1024).toFixed(2), 'KB');
-        console.log('  - MIME type:', req.file.mimetype);
+        console.log('  - File name:', file.originalname);
+        console.log('  - File size:', (file.size / 1024).toFixed(2), 'KB');
+        console.log('  - MIME type:', file.mimetype);
 
         // Create form data with the image file
         const formData = new FormData();
-        formData.append('file', req.file.buffer, {
-            filename: req.file.originalname,
-            contentType: req.file.mimetype
+        formData.append('file', file.buffer, {
+            filename: file.originalname,
+            contentType: file.mimetype
         });
 
         // Upload to MercadoLibre CDN using the pictures/items/upload endpoint

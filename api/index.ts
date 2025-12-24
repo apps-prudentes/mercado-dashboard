@@ -255,8 +255,8 @@ app.use((err: any, req: any, res: any, next: any) => {
 });
 
 // Start server for local development only (not in Vercel)
-if (!process.env.VERCEL) {
-  const PORT = process.env.PORT || 3000;
+if (!process.env['VERCEL']) {
+  const PORT = process.env['PORT'] || 3000;
   app.listen(PORT, () => {
     console.log('\n🚀 MercadoLibre Dashboard Backend (Local)');
     console.log(`📡 Server running on http://localhost:${PORT}`);

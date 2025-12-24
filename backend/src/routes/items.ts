@@ -212,12 +212,12 @@ router.get('/', async (req: Request, res: Response) => {
         const token = await mlAuth.getToken();
 
         // Extract query parameters
-        const offset = parseInt(req.query.offset as string) || 0;
-        const limit = Math.min(parseInt(req.query.limit as string) || 50, 100); // Max 100
-        const status = req.query.status as string;
-        const listingType = req.query.listing_type as string;
-        const searchQuery = (req.query.q as string || '').toLowerCase();
-        const sortBy = req.query.sort as string;
+        const offset = parseInt(req.query['offset'] as string) || 0;
+        const limit = Math.min(parseInt(req.query['limit'] as string) || 50, 100); // Max 100
+        const status = req.query['status'] as string;
+        const listingType = req.query['listing_type'] as string;
+        const searchQuery = (req.query['q'] as string || '').toLowerCase();
+        const sortBy = req.query['sort'] as string;
 
         // Step 1: Get seller ID
         const userResponse = await axios.get('https://api.mercadolibre.com/users/me', {
