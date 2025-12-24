@@ -67,44 +67,17 @@
 }
 
 /* ==========================================
-   AG GRID THEME OVERRIDES
+   AG GRID COMPONENT-SPECIFIC STYLES
    ========================================== */
 ::ng-deep {
-  .ag-theme-alpine {
-    --ag-background-color: hsl(var(--card));
-    --ag-foreground-color: hsl(var(--foreground));
-    --ag-border-color: hsl(var(--border));
-    --ag-header-background-color: hsl(var(--muted));
-    --ag-header-foreground-color: hsl(var(--foreground));
-    --ag-odd-row-background-color: hsl(var(--card));
-    --ag-row-hover-color: hsl(var(--muted) / 0.5);
-    --ag-selected-row-background-color: hsl(var(--primary) / 0.1);
-    --ag-font-family: var(--font-sans);
-    --ag-font-size: 14px;
+  .ag-header-cell {
+    font-weight: 600;
+    padding: 1rem 0.75rem;
+  }
 
-    .ag-header {
-      border-bottom: 2px solid hsl(var(--border));
-    }
-
-    .ag-header-cell {
-      font-weight: 600;
-      padding: 1rem 0.75rem;
-    }
-
-    .ag-cell {
-      padding: 0.75rem;
-      line-height: 1.5;
-    }
-
-    .ag-row {
-      border-bottom: 1px solid hsl(var(--border));
-    }
-
-    .ag-paging-panel {
-      border-top: 2px solid hsl(var(--border));
-      padding: 1rem;
-      background-color: hsl(var(--muted) / 0.3);
-    }
+  .ag-cell {
+    padding: 0.75rem;
+    line-height: 1.5;
   }
 
   .ag-overlay-loading-center {
