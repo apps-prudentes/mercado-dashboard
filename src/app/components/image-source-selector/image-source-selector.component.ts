@@ -22,7 +22,8 @@ export interface SelectedImage {
  */
 interface GalleryImage {
   pictureId: string;
-  url: string;
+  url: string; // URL de alta calidad para validación
+  thumbnailUrl?: string; // URL de thumbnail para mostrar en galería
   title?: string;
   width?: number;
   height?: number;
@@ -214,8 +215,8 @@ export class ImageSourceSelectorComponent implements OnInit {
       this.selectedImages.push({
         source: 'gallery',
         pictureId: image.pictureId,
-        url: image.url, // URL completa de la imagen para validación
-        preview: image.url,
+        url: image.url, // URL de alta calidad para validación
+        preview: image.thumbnailUrl || image.url, // Thumbnail para preview rápido
         validated: image.validated || false
       });
     }

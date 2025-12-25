@@ -55,7 +55,7 @@
                class="gallery-item"
                [class.selected]="isImageSelected(image)"
                (click)="selectFromGallery(image)">
-            <img [src]="image.url" [alt]="image.title || 'Gallery image'">
+            <img [src]="image.thumbnailUrl || image.url" [alt]="image.title || 'Gallery image'">
 
             <!-- Overlay de selección -->
             <div class="selection-overlay" *ngIf="isImageSelected(image)">
