@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Router, ActivatedRoute } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -48,6 +49,7 @@ interface Product {
   buying_mode: string;
   condition: string;
   listing_type_id: string;
+  description?: string; // Descripción del producto
   sale_terms?: SaleTerm[];
   pictures?: Picture[];
   attributes?: Attribute[];
@@ -170,12 +172,13 @@ export class PublishProductComponent implements OnInit {
   successMessage = '';
   errorMessage = '';
   isDuplicateMode = false; // Track if we're in duplicate mode
+  originalItemImages: any[] = []; // Imágenes del item original (para modo duplicar)
 
   // Helper para formularios dinámicos
   picturesText: string = '';
 
   // Imágenes validadas del selector
-  validatedPictureIds: Array<{ id: string }> = [];
+  validatedPictureIds: Array<{ id: string; url?: string }> = [];
 
   constructor(
     private http: HttpClient,
@@ -199,7 +202,7 @@ export class PublishProductComponent implements OnInit {
   /**
    * Load data from duplicated item
    */
-  private loadDuplicateData(): void {
+  private async loadDuplicateData(): Promise<void> {
     const duplicateData = sessionStorage.getItem('duplicateItem');
     if (duplicateData) {
       const item = JSON.parse(duplicateData);
@@ -208,6 +211,24 @@ export class PublishProductComponent implements OnInit {
       this.isDuplicateMode = true;
 
       console.log('📋 Duplicating item:', item);
+
+      // Guardar imágenes originales completas para pasar al selector
+      this.originalItemImages = item.pictures || [];
+      console.log('📸 Original images:', this.originalItemImages);
+
+      // Fetch description from API (separate endpoint)
+      let description = '';
+      try {
+        console.log('📄 Fetching description for item:', item.id);
+        const descResponse = await firstValueFrom(
+          this.http.get<any>(`${environment.apiUrl}/items/${item.id}/description`)
+        );
+        description = descResponse?.plain_text || '';
+        console.log('✅ Description fetched:', description ? `${description.substring(0, 100)}...` : '(empty)');
+      } catch (error) {
+        console.warn('⚠️ Could not fetch description:', error);
+        description = '';
+      }
 
       // Map pictures from ML format to form format
       // ML pictures have: {id, url, secure_url, size, ...}
@@ -241,6 +262,7 @@ export class PublishProductComponent implements OnInit {
         buying_mode: item.buying_mode || 'buy_it_now',
         condition: item.condition,
         listing_type_id: item.listing_type_id,
+        description: description, // Usar descripción obtenida del endpoint
         sale_terms: saleTerms,
         pictures: mappedPictures,
         attributes: item.attributes || [],
@@ -304,7 +326,7 @@ export class PublishProductComponent implements OnInit {
   /**
    * Maneja las imágenes validadas del selector
    */
-  handleImagesValidated(pictureIds: Array<{ id: string }>): void {
+  handleImagesValidated(pictureIds: Array<{ id: string; url?: string }>): void {
     console.log('[PublishProduct] Imágenes validadas recibidas:', pictureIds);
     this.validatedPictureIds = pictureIds;
   }
@@ -318,9 +340,17 @@ export class PublishProductComponent implements OnInit {
     let pictures: Picture[] = [];
 
     if (this.validatedPictureIds.length > 0) {
-      // Usar picture_ids validados del selector
-      pictures = this.validatedPictureIds.map(pic => ({ source: pic.id }));
-      console.log('[PublishProduct] Usando imágenes del selector:', pictures);
+      // Usar URLs validadas del selector
+      // ML requiere { source: "url" } según documentación
+      pictures = this.validatedPictureIds
+        .filter(pic => pic.url) // Solo las que tienen URL
+        .map(pic => ({ source: pic.url! }));
+
+      console.log('[PublishProduct] Usando imágenes del selector (URLs):', pictures);
+
+      if (pictures.length === 0) {
+        console.warn('[PublishProduct] ⚠️ No se encontraron URLs en las imágenes validadas');
+      }
     } else if (this.picturesText) {
       // Fallback: usar URLs del textarea
       pictures = this.picturesText.split('\n')

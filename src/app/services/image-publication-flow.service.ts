@@ -9,6 +9,7 @@ import { MLImageUploadService } from './ml-image-upload.service';
 export interface ImagePublicationResult {
   success: boolean;
   pictureId?: string;
+  imageUrl?: string; // URL de la imagen para usar en pictures.source
   errors: string[];
   warnings: string[];
 }
@@ -34,12 +35,14 @@ export class ImagePublicationFlowService {
    * @param file - Archivo de imagen
    * @param categoryId - ID de categoría ML
    * @param pictureType - Tipo de imagen
+   * @param itemTitle - Título de la publicación (opcional)
    * @returns Resultado con pictureId si es exitoso
    */
   async processImageForPublication(
     file: File,
     categoryId: string,
-    pictureType: 'thumbnail' | 'variation_thumbnail' | 'other' = 'thumbnail'
+    pictureType: 'thumbnail' | 'variation_thumbnail' | 'other' = 'thumbnail',
+    itemTitle?: string
   ): Promise<ImagePublicationResult> {
     const errors: string[] = [];
     const warnings: string[] = [];
@@ -91,7 +94,7 @@ export class ImagePublicationFlowService {
       };
     }
 
-    const mlValidation = await this.diagnostic.validateImage(imageUrl, categoryId, pictureType);
+    const mlValidation = await this.diagnostic.validateImage(imageUrl, categoryId, pictureType, itemTitle);
 
     const mlErrors = this.diagnostic.extractErrorMessages(mlValidation);
     if (mlErrors.length > 0) {
@@ -107,6 +110,7 @@ export class ImagePublicationFlowService {
     return {
       success: true,
       pictureId: uploadResult.id,
+      imageUrl: imageUrl, // Retornar la URL también
       errors: [],
       warnings
     };
@@ -154,16 +158,18 @@ export class ImagePublicationFlowService {
    * @param pictureId - ID de imagen ya en ML
    * @param categoryId - ID de categoría ML
    * @param pictureType - Tipo de imagen
+   * @param itemTitle - Título de la publicación (opcional)
    * @returns Resultado de validación (sin upload)
    */
   async validateExistingImage(
     pictureId: string,
     categoryId: string,
-    pictureType: 'thumbnail' | 'variation_thumbnail' | 'other' = 'thumbnail'
+    pictureType: 'thumbnail' | 'variation_thumbnail' | 'other' = 'thumbnail',
+    itemTitle?: string
   ): Promise<ImagePublicationResult> {
     console.log(`[ImagePublicationFlow] Validando imagen existente: ${pictureId}`);
 
-    const mlValidation = await this.diagnostic.validateImage(pictureId, categoryId, pictureType);
+    const mlValidation = await this.diagnostic.validateImage(pictureId, categoryId, pictureType, itemTitle);
 
     const mlErrors = this.diagnostic.extractErrorMessages(mlValidation);
 
@@ -178,9 +184,12 @@ export class ImagePublicationFlowService {
 
     console.log('✅ [ImagePublicationFlow] Imagen existente validada');
 
+    // Nota: Para imágenes existentes (picture_id), retornamos también el picture_id
+    // pero no la URL ya que se asume que ya está en ML
     return {
       success: true,
       pictureId: pictureId,
+      imageUrl: undefined, // No hay URL nueva para imágenes existentes
       errors: [],
       warnings: []
     };
@@ -191,16 +200,18 @@ export class ImagePublicationFlowService {
    * @param imageUrl - URL de la imagen
    * @param categoryId - ID de categoría ML
    * @param pictureType - Tipo de imagen
+   * @param itemTitle - Título de la publicación (opcional)
    * @returns Resultado de validación (sin upload)
    */
   async validateImageFromUrl(
     imageUrl: string,
     categoryId: string,
-    pictureType: 'thumbnail' | 'variation_thumbnail' | 'other' = 'thumbnail'
+    pictureType: 'thumbnail' | 'variation_thumbnail' | 'other' = 'thumbnail',
+    itemTitle?: string
   ): Promise<ImagePublicationResult> {
     console.log(`[ImagePublicationFlow] Validando imagen desde URL: ${imageUrl}`);
 
-    const mlValidation = await this.diagnostic.validateImage(imageUrl, categoryId, pictureType);
+    const mlValidation = await this.diagnostic.validateImage(imageUrl, categoryId, pictureType, itemTitle);
 
     const mlErrors = this.diagnostic.extractErrorMessages(mlValidation);
 
@@ -208,7 +219,7 @@ export class ImagePublicationFlowService {
       return {
         success: false,
         errors: mlErrors,
-        warnings: ['Nota: La imagen desde URL no se sube a ML, deberás proporcionarla al crear el item']
+        warnings: ['Nota: La imagen desde URL será usada directamente en pictures.source']
       };
     }
 
@@ -216,8 +227,9 @@ export class ImagePublicationFlowService {
 
     return {
       success: true,
+      imageUrl: imageUrl, // Retornar la URL validada
       errors: [],
-      warnings: ['Nota: La imagen desde URL no se sube a ML, deberás proporcionarla al crear el item']
+      warnings: []
     };
   }
 }

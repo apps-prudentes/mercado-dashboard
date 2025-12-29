@@ -143,6 +143,7 @@ router.post('/diagnostic', async (req: Request, res: Response) => {
         console.log('🔍 Validating image with ML diagnostic API...');
         console.log('  - Category:', context.category_id);
         console.log('  - Picture type:', context.picture_type || 'thumbnail');
+        console.log('  - Title:', context.title || '(not provided)');
         console.log('  - Picture URL/ID length:', picture_url.length);
 
         // Call MercadoLibre diagnostic API
@@ -152,7 +153,8 @@ router.post('/diagnostic', async (req: Request, res: Response) => {
                 picture_url: picture_url, // Can be URL, Base64, or picture_id
                 context: {
                     category_id: context.category_id,
-                    picture_type: context.picture_type || 'thumbnail'
+                    picture_type: context.picture_type || 'thumbnail',
+                    ...(context.title && { title: context.title }) // Include title if provided
                 }
             },
             {

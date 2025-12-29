@@ -11,7 +11,7 @@ export interface SelectedImage {
   source: 'upload' | 'gallery' | 'url';
   pictureId?: string;
   file?: File;
-  url?: string;
+  url?: string; // URL completa de la imagen en ML (para usar en pictures.source)
   preview: string;
   validated: boolean;
   validationErrors?: string[];
@@ -45,9 +45,11 @@ interface GalleryImage {
 })
 export class ImageSourceSelectorComponent implements OnInit {
   @Input() categoryId: string = 'MLB1234'; // ID de categoría ML (requerido)
+  @Input() itemTitle: string = ''; // Título de la publicación (opcional)
   @Input() maxImages: number = 10; // Máximo número de imágenes permitidas
+  @Input() initialImages: any[] = []; // Imágenes iniciales del producto (para modo duplicar)
 
-  @Output() onImagesValidated = new EventEmitter<Array<{ id: string }>>();
+  @Output() onImagesValidated = new EventEmitter<Array<{ id: string; url?: string }>>();
   @Output() onValidationStart = new EventEmitter<void>();
   @Output() onValidationComplete = new EventEmitter<void>();
 
@@ -85,6 +87,7 @@ export class ImageSourceSelectorComponent implements OnInit {
   ngOnInit() {
     console.log('[ImageSourceSelector] ngOnInit - categoryId:', this.categoryId);
     this.loadGallery();
+    this.loadInitialImages();
   }
 
   // ============ TAB 1: Upload ============
@@ -181,6 +184,35 @@ export class ImageSourceSelectorComponent implements OnInit {
     } finally {
       this.isLoadingGallery = false;
     }
+  }
+
+  /**
+   * Carga imágenes iniciales del producto (modo duplicar)
+   */
+  loadInitialImages() {
+    if (!this.initialImages || this.initialImages.length === 0) {
+      return;
+    }
+
+    console.log(`[ImageSourceSelector] Cargando ${this.initialImages.length} imágenes iniciales del producto`);
+
+    this.initialImages.forEach((img: any, index: number) => {
+      // Las imágenes vienen con estructura: {id, url, secure_url, size, ...}
+      const imageUrl = img.secure_url || img.url;
+      const pictureId = img.id;
+
+      if (imageUrl) {
+        this.selectedImages.push({
+          source: 'gallery', // Marcar como galería ya que ya están en ML
+          pictureId: pictureId,
+          url: imageUrl,
+          preview: imageUrl,
+          validated: false // Necesitan validarse para la nueva categoría
+        });
+      }
+    });
+
+    console.log(`[ImageSourceSelector] ✅ ${this.selectedImages.length} imágenes del producto original cargadas`);
   }
 
   filterGallery() {
@@ -355,16 +387,19 @@ export class ImageSourceSelectorComponent implements OnInit {
           result = await this.flow.processImageForPublication(
             img.file,
             this.categoryId,
-            i === 0 ? 'thumbnail' : 'other'
+            i === 0 ? 'thumbnail' : 'other',
+            this.itemTitle
           );
 
           console.log(`   📊 Resultado:`, result);
 
           if (result.success) {
             img.pictureId = result.pictureId;
+            img.url = result.imageUrl; // Guardar la URL también
             img.validated = true;
             img.validationErrors = [];
             console.log(`   ✅ Imagen validada y subida. Picture ID: ${result.pictureId}`);
+            console.log(`   🌐 URL: ${result.imageUrl}`);
           } else {
             img.validated = false;
             img.validationErrors = result.errors;
@@ -378,7 +413,8 @@ export class ImageSourceSelectorComponent implements OnInit {
           result = await this.flow.validateImageFromUrl(
             img.url,
             this.categoryId,
-            i === 0 ? 'thumbnail' : 'other'
+            i === 0 ? 'thumbnail' : 'other',
+            this.itemTitle
           );
 
           console.log(`   📊 Resultado:`, result);
@@ -386,7 +422,8 @@ export class ImageSourceSelectorComponent implements OnInit {
           img.validationErrors = result.errors;
 
           if (result.success) {
-            console.log(`   ✅ Imagen de galería validada`);
+            // La URL ya está en img.url, solo asegurarnos de que se mantenga
+            console.log(`   ✅ Imagen de galería validada con URL: ${img.url}`);
           } else {
             console.log(`   ❌ Validación falló:`, result.errors);
           }
@@ -397,7 +434,8 @@ export class ImageSourceSelectorComponent implements OnInit {
           result = await this.flow.validateImageFromUrl(
             img.url,
             this.categoryId,
-            i === 0 ? 'thumbnail' : 'other'
+            i === 0 ? 'thumbnail' : 'other',
+            this.itemTitle
           );
 
           console.log(`   📊 Resultado:`, result);
@@ -405,7 +443,8 @@ export class ImageSourceSelectorComponent implements OnInit {
           img.validationErrors = result.errors;
 
           if (result.success) {
-            console.log(`   ✅ Imagen URL validada`);
+            // La URL ya está en img.url
+            console.log(`   ✅ Imagen URL validada: ${img.url}`);
           } else {
             console.log(`   ❌ Validación falló:`, result.errors);
           }
@@ -424,14 +463,22 @@ export class ImageSourceSelectorComponent implements OnInit {
     this.isValidating = false;
     this.onValidationComplete.emit();
 
-    // Emitir solo las imágenes validadas con pictureId
+    // Emitir las imágenes validadas con URL (requerido para pictures.source)
+    // El ID es opcional y solo para referencia
     const validatedImages = this.selectedImages
-      .filter(img => img.validated && img.pictureId)
-      .map(img => ({ id: img.pictureId! }));
+      .filter(img => img.validated && img.url) // Solo las que tienen URL
+      .map(img => ({
+        id: img.pictureId || '', // ID opcional (vacío si no existe)
+        url: img.url // URL requerida para pictures.source
+      }));
 
     console.log(`\n✅ [ImageSourceSelector] VALIDACIÓN COMPLETA`);
-    console.log(`📊 Resultado: ${validatedImages.length}/${totalImages} imágenes validadas`);
-    console.log(`📋 Picture IDs validados:`, validatedImages);
+    console.log(`📊 Resultado: ${validatedImages.length}/${totalImages} imágenes validadas con URL`);
+    console.log(`📋 Imágenes validadas:`, validatedImages);
+
+    if (validatedImages.length === 0) {
+      console.warn('⚠️ No hay imágenes validadas con URL para emitir');
+    }
 
     this.onImagesValidated.emit(validatedImages);
   }

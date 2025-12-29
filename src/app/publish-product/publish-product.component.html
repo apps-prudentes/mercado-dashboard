@@ -92,6 +92,21 @@
             </small>
           </div>
 
+          <!-- Description -->
+          <div class="form-group">
+            <label for="description" class="form-label">Descripción del Producto</label>
+            <textarea class="form-textarea"
+                      id="description"
+                      name="description"
+                      [(ngModel)]="product.description"
+                      rows="6"
+                      maxlength="50000"
+                      placeholder="Descripción detallada del producto. Puedes incluir características, especificaciones técnicas, garantía, etc."></textarea>
+            <small class="form-hint">
+              Descripción completa del producto. Máximo 50,000 caracteres. Puedes usar texto plano o HTML básico.
+            </small>
+          </div>
+
           <!-- Price & Stock Row -->
           <div class="form-row">
             <div class="form-group">
@@ -238,6 +253,8 @@
           <div class="form-group">
             <app-image-source-selector
               [categoryId]="product.category_id"
+              [itemTitle]="product.family_name"
+              [initialImages]="originalItemImages"
               [maxImages]="10"
               (onImagesValidated)="handleImagesValidated($event)">
             </app-image-source-selector>

@@ -12,6 +12,7 @@ interface MLDiagnosticRequest {
   context: {
     category_id: string;
     picture_type: 'thumbnail' | 'variation_thumbnail' | 'other';
+    title?: string; // Título de la publicación para mejor contexto
   };
 }
 
@@ -50,11 +51,13 @@ export class MLImageDiagnosticService {
    * @param imageData - File, URL string, picture_id, o base64
    * @param categoryId - ID de categoría ML
    * @param pictureType - Tipo de imagen (thumbnail, variation_thumbnail, other)
+   * @param itemTitle - Título de la publicación (opcional, mejora la validación)
    */
   async validateImage(
     imageData: string | File,
     categoryId: string,
-    pictureType: 'thumbnail' | 'variation_thumbnail' | 'other' = 'thumbnail'
+    pictureType: 'thumbnail' | 'variation_thumbnail' | 'other' = 'thumbnail',
+    itemTitle?: string
   ): Promise<MLDiagnosticResponse> {
     // Determinar el valor de picture_url (puede ser URL, Base64, o picture_id)
     let pictureUrl: string;
@@ -72,7 +75,8 @@ export class MLImageDiagnosticService {
       picture_url: pictureUrl, // Todo va aquí: URL, Base64, o picture_id
       context: {
         category_id: categoryId,
-        picture_type: pictureType
+        picture_type: pictureType,
+        ...(itemTitle && { title: itemTitle }) // Incluir título si está disponible
       }
     };
 
