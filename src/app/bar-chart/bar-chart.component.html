@@ -103,15 +103,15 @@
       <div class="custom-date-picker">
         <mat-form-field appearance="outline" class="compact-date-field">
           <mat-label>Rango personalizado</mat-label>
-          <mat-date-range-input [rangePicker]="picker" [max]="maxDate">
-            <input matStartDate [(ngModel)]="customStartDate" placeholder="Inicio">
-            <input matEndDate [(ngModel)]="customEndDate" placeholder="Fin">
+          <mat-date-range-input [formGroup]="customRangeForm" [rangePicker]="picker" [max]="maxDate">
+            <input matStartDate formControlName="start" placeholder="Inicio">
+            <input matEndDate formControlName="end" placeholder="Fin">
           </mat-date-range-input>
           <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
           <mat-date-range-picker #picker panelClass="custom-datepicker-panel"></mat-date-range-picker>
         </mat-form-field>
         <button mat-raised-button color="primary" (click)="applyCustomRange()"
-          [disabled]="!customStartDate || !customEndDate" class="apply-custom-btn">
+          [disabled]="!customRangeForm.value.start || !customRangeForm.value.end" class="apply-custom-btn">
           Aplicar
         </button>
       </div>

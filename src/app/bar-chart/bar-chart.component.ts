@@ -36,6 +36,7 @@ export class BarChartComponent implements OnInit {
   public totalSumChangeIcon: string = 'trending_flat';
   public realSumChangeIcon: string = 'trending_flat';
   dateRangeForm: FormGroup;
+  customRangeForm: FormGroup; // FormGroup para el date range picker según documentación
   maxDate: Date = new Date(); // Fecha máxima: hoy
   selectedStartDate: Date | null = null;
   selectedEndDate: Date | null = null;
@@ -49,6 +50,12 @@ export class BarChartComponent implements OnInit {
     this.dateRangeForm = new FormGroup({
       start: new FormControl(),
       end: new FormControl(),
+    });
+
+    // FormGroup para el date range picker según documentación oficial
+    this.customRangeForm = new FormGroup({
+      start: new FormControl<Date | null>(null),
+      end: new FormControl<Date | null>(null),
     });
   }
 
@@ -352,10 +359,13 @@ export class BarChartComponent implements OnInit {
   }
 
   applyCustomRange() {
-    if (this.customStartDate && this.customEndDate) {
+    const startDate = this.customRangeForm.value.start;
+    const endDate = this.customRangeForm.value.end;
+
+    if (startDate && endDate) {
       // Normalizar fechas de entrada
-      const normalizedStartDate = this.normalizeToStartOfDay(this.customStartDate);
-      const normalizedEndDate = this.normalizeToEndOfDay(this.customEndDate);
+      const normalizedStartDate = this.normalizeToStartOfDay(startDate);
+      const normalizedEndDate = this.normalizeToEndOfDay(endDate);
 
       // Validar que el rango no sea mayor a 1 año
       const diffTime = Math.abs(normalizedEndDate.getTime() - normalizedStartDate.getTime());

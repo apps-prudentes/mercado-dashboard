@@ -214,39 +214,18 @@
           <div class="attributes-container">
             <div *ngIf="product.attributes && product.attributes.length > 0">
               <div *ngFor="let attr of product.attributes; let i = index" class="attribute-item">
-                <div class="form-row attribute-row">
-                  <div class="form-group">
-                    <label class="form-label">ID del Atributo</label>
-                    <input type="text"
-                           class="form-input form-input-sm"
-                           [(ngModel)]="attr.id"
-                           [name]="'attr_id_' + i"
-                           placeholder="Ej: BRAND, MODEL">
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">Nombre</label>
-                    <input type="text"
-                           class="form-input form-input-sm"
-                           [(ngModel)]="attr.name"
-                           [name]="'attr_name_' + i"
-                           placeholder="Ej: Marca">
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">Valor</label>
-                    <input type="text"
-                           class="form-input form-input-sm"
-                           [(ngModel)]="attr.value_name"
-                           [name]="'attr_value_' + i"
-                           placeholder="Ej: Genérica">
-                  </div>
-                  <div class="form-group attribute-action">
-                    <label class="form-label">&nbsp;</label>
-                    <button type="button"
-                            class="btn-icon btn-destructive"
-                            (click)="removeAttribute(i)">
-                      <mat-icon>delete</mat-icon>
-                    </button>
-                  </div>
+                <label class="form-label attribute-name">{{ attr.name }}</label>
+                <div class="attribute-value-row">
+                  <input type="text"
+                         class="form-input form-input-sm"
+                         [(ngModel)]="attr.value_name"
+                         [name]="'attr_value_' + i"
+                         placeholder="Valor">
+                  <button type="button"
+                          class="btn-icon btn-destructive"
+                          (click)="removeAttribute(i)">
+                    <mat-icon>delete</mat-icon>
+                  </button>
                 </div>
               </div>
             </div>
