@@ -448,6 +448,18 @@
     }
   }
 
+  &.btn-edit {
+    background-color: hsl(var(--card));
+    color: hsl(var(--foreground));
+    border-color: hsl(var(--border));
+
+    &:hover:not(:disabled) {
+      background-color: hsl(var(--muted) / 0.5);
+      border-color: hsl(var(--primary));
+      color: hsl(var(--primary));
+    }
+  }
+
   &.btn-relist {
     &:hover:not(:disabled) {
       background-color: hsl(var(--success) / 0.1);
@@ -526,7 +538,7 @@
   }
 
   .table-card {
-    padding: 0.5rem; // Margen pequeño en mobile
+    padding: 0; // Sin padding para aprovechar todo el espacio
     border: none; // Eliminar bordes laterales marcados en rojo
     box-shadow: none; // Eliminar sombra
     background: transparent; // Fondo transparente
@@ -541,6 +553,10 @@
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
     }
+  }
+
+  .filters-card {
+    padding: 1rem; // Mismo padding que desktop para consistencia
   }
 
   .publications-table {
