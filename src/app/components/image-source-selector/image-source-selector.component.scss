@@ -652,3 +652,163 @@
     font-size: 0.9rem;
   }
 }
+
+// ============ Mobile Optimizations ============
+@media (max-width: 768px) {
+  .image-selector-container {
+    padding: 0.5rem;
+    min-height: 300px;
+  }
+
+  // Reducir mucho el tamaño del cuadro de arrastrar
+  .upload-section {
+    padding: 1rem;
+  }
+
+  .upload-area {
+    padding: 1.5rem 1rem;
+
+    .upload-icon {
+      font-size: 36px;
+      width: 36px;
+      height: 36px;
+      margin-bottom: 0.5rem;
+    }
+
+    .upload-text {
+      font-size: 0.75rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .upload-hint {
+      font-size: 0.7rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .upload-specs {
+      font-size: 0.65rem;
+    }
+  }
+
+  // Tabs más compactos
+  ::ng-deep {
+    .mat-mdc-tab {
+      min-width: 80px;
+      height: 40px;
+    }
+
+    .mdc-tab__text-label {
+      font-size: 0.75rem;
+    }
+  }
+
+  // Gallery más compacto
+  .gallery-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 0.5rem;
+    max-height: 400px;
+  }
+
+  .gallery-item {
+    img {
+      height: 100px;
+    }
+
+    .image-info {
+      padding: 0.3rem;
+
+      .image-title {
+        font-size: 0.65rem;
+      }
+
+      .image-dimensions {
+        font-size: 0.6rem;
+      }
+    }
+  }
+
+  // Selected images más compacto
+  .selected-images-section {
+    margin-top: 1rem;
+    padding-top: 1rem;
+
+    .section-header {
+      h3 {
+        font-size: 0.9rem;
+      }
+
+      .hint {
+        font-size: 0.7rem;
+      }
+    }
+  }
+
+  .selected-grid {
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: 0.5rem;
+  }
+
+  .selected-item {
+    img {
+      height: 90px;
+    }
+
+    .source-badge {
+      font-size: 0.6rem;
+      padding: 0.2rem 0.35rem;
+    }
+
+    .remove-btn {
+      width: 24px;
+      height: 24px;
+
+      mat-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+      }
+    }
+  }
+
+  // URL section más compacto
+  .url-section {
+    padding: 1rem;
+  }
+
+  // No selection más compacto
+  .no-selection {
+    padding: 2rem 1rem;
+
+    mat-icon {
+      font-size: 40px;
+      width: 40px;
+      height: 40px;
+    }
+
+    p {
+      font-size: 0.85rem;
+    }
+
+    small {
+      font-size: 0.7rem;
+    }
+  }
+
+  .no-images {
+    padding: 2rem 1rem;
+
+    mat-icon {
+      font-size: 40px;
+      width: 40px;
+      height: 40px;
+    }
+
+    p {
+      font-size: 0.85rem;
+    }
+
+    small {
+      font-size: 0.7rem;
+    }
+  }
+}
