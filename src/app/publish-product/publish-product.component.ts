@@ -213,7 +213,7 @@ export class PublishProductComponent implements OnInit {
 
       // Pre-fill form with item data
       this.product = {
-        family_name: item.title + ' (Copia)',
+        family_name: item.title,
         category_id: item.category_id,
         price: item.price,
         currency_id: item.currency_id || 'MXN',
@@ -318,7 +318,7 @@ export class PublishProductComponent implements OnInit {
           const numberValue = this.attributeValues[catAttr.id + '_number'];
           const unitValue = this.attributeValues[catAttr.id + '_unit'];
           hasValue = numberValue !== undefined && numberValue !== null && numberValue !== '' &&
-                     unitValue !== undefined && unitValue !== null && unitValue !== '';
+            unitValue !== undefined && unitValue !== null && unitValue !== '';
 
           if (!hasValue) {
             this.attributeErrors[catAttr.id] = 'Este campo es requerido';
