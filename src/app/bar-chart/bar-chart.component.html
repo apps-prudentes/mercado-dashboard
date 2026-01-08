@@ -4,79 +4,131 @@
   <p class="page-description">Resumen de ingresos y estadísticas</p>
 </div>
 
-<!-- Stats Cards Grid -->
-<div class="grid grid-cols-4 stats-grid">
-  <!-- Total Sum Card -->
-  <div class="card stat-card">
-    <div class="stat-header">
-      <div class="stat-icon-container" style="background-color: hsl(var(--chart-1) / 0.1);">
-        <mat-icon class="stat-icon" style="color: hsl(var(--chart-1));">attach_money</mat-icon>
+<!-- Main Grid: Metrics + Product Lists -->
+<div class="main-grid">
+  <!-- Left Column: Metrics Stack -->
+  <div class="card metrics-stack-card">
+    <div class="metrics-stack">
+      <!-- Total Sum Metric -->
+      <div class="metric-item">
+        <div class="metric-icon-container" style="background-color: hsl(var(--chart-1) / 0.1);">
+          <mat-icon class="metric-icon" style="color: hsl(var(--chart-1));">attach_money</mat-icon>
+        </div>
+        <div class="metric-content">
+          <p class="metric-label">Ventas Totales</p>
+          <mat-spinner *ngIf="totalSumIsLoading" diameter="20" class="metric-spinner"></mat-spinner>
+          <h3 *ngIf="!totalSumIsLoading" class="metric-value">{{ totalSum | currency:'MXN':'symbol':'1.0-0' }}</h3>
+          <p class="metric-change" *ngIf="!totalSumIsLoading && isComparisonMode"
+            [class.positive]="totalSumChangePercent > 0"
+            [class.negative]="totalSumChangePercent < 0"
+            [class.neutral]="totalSumChangePercent === 0">
+            {{ totalSumChangePercent > 0 ? '+' : '' }}{{ totalSumChangePercent | number:'1.1-1' }}% vs período anterior
+          </p>
+          <p class="metric-subtitle" *ngIf="!totalSumIsLoading && !isComparisonMode">Total acumulado</p>
+        </div>
       </div>
-    </div>
-    <div class="stat-body">
-      <p class="stat-label">Ventas Totales</p>
-      <mat-spinner *ngIf="totalSumIsLoading" diameter="24" class="stat-spinner"></mat-spinner>
-      <h2 *ngIf="!totalSumIsLoading" class="stat-value">{{ totalSum | currency:'MXN':'symbol':'1.0-0' }}</h2>
-      <p class="stat-change" *ngIf="!totalSumIsLoading" [class.positive]="totalSumChangePercent > 0"
-        [class.negative]="totalSumChangePercent < 0" [class.neutral]="totalSumChangePercent === 0">
-        <mat-icon class="change-icon">{{ totalSumChangeIcon }}</mat-icon>
-        <span>{{ totalSumChangePercent > 0 ? '+' : '' }}{{ totalSumChangePercent | number:'1.1-1' }}% vs período
-          anterior</span>
-      </p>
+
+      <!-- Shipping Metric -->
+      <div class="metric-item">
+        <div class="metric-icon-container" style="background-color: hsl(var(--chart-2) / 0.1);">
+          <mat-icon class="metric-icon" style="color: hsl(var(--chart-2));">local_shipping</mat-icon>
+        </div>
+        <div class="metric-content">
+          <p class="metric-label">Costos de Envío</p>
+          <mat-spinner *ngIf="enviosIsLoading" diameter="20" class="metric-spinner"></mat-spinner>
+          <h3 *ngIf="!enviosIsLoading" class="metric-value">{{ envios | currency:'MXN':'symbol':'1.0-0' }}</h3>
+          <p class="metric-subtitle" *ngIf="!enviosIsLoading">Total acumulado</p>
+        </div>
+      </div>
+
+      <!-- Fees Metric -->
+      <div class="metric-item">
+        <div class="metric-icon-container" style="background-color: hsl(var(--chart-3) / 0.1);">
+          <mat-icon class="metric-icon" style="color: hsl(var(--chart-3));">receipt</mat-icon>
+        </div>
+        <div class="metric-content">
+          <p class="metric-label">Comisiones ML</p>
+          <mat-spinner *ngIf="feesIsLoading" diameter="20" class="metric-spinner"></mat-spinner>
+          <h3 *ngIf="!feesIsLoading" class="metric-value">{{ fees | currency:'MXN':'symbol':'1.0-0' }}</h3>
+          <p class="metric-subtitle" *ngIf="!feesIsLoading">Total en comisiones</p>
+        </div>
+      </div>
+
+      <!-- Real Sum Metric -->
+      <div class="metric-item metric-item-highlight">
+        <div class="metric-icon-container" style="background-color: hsl(var(--success) / 0.1);">
+          <mat-icon class="metric-icon" style="color: hsl(var(--success));">account_balance_wallet</mat-icon>
+        </div>
+        <div class="metric-content">
+          <p class="metric-label">Ganancia Real</p>
+          <mat-spinner *ngIf="realSumIsLoading" diameter="20" class="metric-spinner"></mat-spinner>
+          <h3 *ngIf="!realSumIsLoading" class="metric-value metric-value-success">{{ realSum | currency:'MXN':'symbol':'1.0-0' }}</h3>
+          <p class="metric-change" *ngIf="!realSumIsLoading && isComparisonMode"
+            [class.positive]="realSumChangePercent > 0"
+            [class.negative]="realSumChangePercent < 0"
+            [class.neutral]="realSumChangePercent === 0">
+            {{ realSumChangePercent > 0 ? '+' : '' }}{{ realSumChangePercent | number:'1.1-1' }}% vs período anterior
+          </p>
+          <p class="metric-subtitle" *ngIf="!realSumIsLoading && !isComparisonMode">Ingresos netos</p>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- Shipping Card -->
-  <div class="card stat-card">
-    <div class="stat-header">
-      <div class="stat-icon-container" style="background-color: hsl(var(--chart-2) / 0.1);">
-        <mat-icon class="stat-icon" style="color: hsl(var(--chart-2));">local_shipping</mat-icon>
+  <!-- Right Column: Product Lists -->
+  <div class="products-lists-container">
+    <!-- Últimos Publicados -->
+    <div class="card product-list-card">
+      <div class="product-list-header">
+        <mat-icon class="list-icon">inventory_2</mat-icon>
+        <h3 class="product-list-title">Últimos Publicados</h3>
+      </div>
+      <div class="product-list-content">
+        <mat-spinner *ngIf="productsLoading" diameter="32" class="products-spinner"></mat-spinner>
+        <div *ngIf="!productsLoading && recentProducts.length === 0" class="empty-state">
+          <p class="empty-text">No hay publicaciones recientes</p>
+        </div>
+        <div *ngIf="!productsLoading && recentProducts.length > 0" class="products-list">
+          <div *ngFor="let product of recentProducts" class="product-item">
+            <div class="product-info">
+              <p class="product-title">{{ product.title }}</p>
+              <div class="product-meta">
+                <span class="product-price">{{ product.price | currency:'MXN':'symbol':'1.0-0' }}</span>
+                <span class="product-status" [class.status-active]="product.status === 'active'"
+                  [class.status-paused]="product.status === 'paused'">
+                  {{ product.status === 'active' ? 'Activo' : 'Pausado' }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="stat-body">
-      <p class="stat-label">Costos de Envío</p>
-      <mat-spinner *ngIf="enviosIsLoading" diameter="24" class="stat-spinner"></mat-spinner>
-      <h2 *ngIf="!enviosIsLoading" class="stat-value">{{ envios | currency:'MXN':'symbol':'1.0-0' }}</h2>
-      <p class="stat-change neutral" *ngIf="!enviosIsLoading">
-        <span class="text-muted">Total acumulado</span>
-      </p>
-    </div>
-  </div>
 
-  <!-- Fees Card -->
-  <div class="card stat-card">
-    <div class="stat-header">
-      <div class="stat-icon-container" style="background-color: hsl(var(--chart-3) / 0.1);">
-        <mat-icon class="stat-icon" style="color: hsl(var(--chart-3));">receipt</mat-icon>
+    <!-- Más Vendidos -->
+    <div class="card product-list-card">
+      <div class="product-list-header">
+        <mat-icon class="list-icon list-icon-trending">trending_up</mat-icon>
+        <h3 class="product-list-title">Más Vendidos</h3>
       </div>
-    </div>
-    <div class="stat-body">
-      <p class="stat-label">Comisiones ML</p>
-      <mat-spinner *ngIf="feesIsLoading" diameter="24" class="stat-spinner"></mat-spinner>
-      <h2 *ngIf="!feesIsLoading" class="stat-value">{{ fees | currency:'MXN':'symbol':'1.0-0' }}</h2>
-      <p class="stat-change neutral" *ngIf="!feesIsLoading">
-        <span class="text-muted">Total en comisiones</span>
-      </p>
-    </div>
-  </div>
-
-  <!-- Real Sum Card -->
-  <div class="card stat-card stat-card-highlight">
-    <div class="stat-header">
-      <div class="stat-icon-container" style="background-color: hsl(var(--success) / 0.1);">
-        <mat-icon class="stat-icon" style="color: hsl(var(--success));">account_balance_wallet</mat-icon>
+      <div class="product-list-content">
+        <mat-spinner *ngIf="productsLoading" diameter="32" class="products-spinner"></mat-spinner>
+        <div *ngIf="!productsLoading && topSellingProducts.length === 0" class="empty-state">
+          <p class="empty-text">No hay productos con ventas</p>
+        </div>
+        <div *ngIf="!productsLoading && topSellingProducts.length > 0" class="products-list">
+          <div *ngFor="let product of topSellingProducts; let i = index" class="product-item">
+            <span class="product-rank">{{ i + 1 }}</span>
+            <div class="product-info">
+              <p class="product-title">{{ product.title }}</p>
+              <div class="product-meta">
+                <span class="product-sales">{{ product.sold_quantity || 0 }} ventas</span>
+                <span class="product-revenue">{{ (product.price * (product.sold_quantity || 0)) | currency:'MXN':'symbol':'1.0-0' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-    <div class="stat-body">
-      <p class="stat-label">Ganancia Real</p>
-      <mat-spinner *ngIf="realSumIsLoading" diameter="24" class="stat-spinner"></mat-spinner>
-      <h2 *ngIf="!realSumIsLoading" class="stat-value text-success">{{ realSum | currency:'MXN':'symbol':'1.0-0' }}</h2>
-      <p class="stat-change" *ngIf="!realSumIsLoading" [class.positive]="realSumChangePercent > 0"
-        [class.negative]="realSumChangePercent < 0" [class.neutral]="realSumChangePercent === 0">
-        <mat-icon class="change-icon">{{ realSumChangeIcon }}</mat-icon>
-        <span>{{ realSumChangePercent > 0 ? '+' : '' }}{{ realSumChangePercent | number:'1.1-1' }}% vs período
-          anterior</span>
-      </p>
     </div>
   </div>
 </div>
