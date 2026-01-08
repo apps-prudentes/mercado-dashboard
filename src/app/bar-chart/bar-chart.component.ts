@@ -7,6 +7,19 @@ import { forkJoin, of } from 'rxjs';
 import { catchError, map, mergeMap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
+interface Publication {
+  id: string;
+  title: string;
+  price: number;
+  available_quantity: number;
+  sold_quantity?: number;
+  status: string;
+  thumbnail: string | null;
+  listing_type_id: string;
+  condition: string;
+  permalink: string;
+}
+
 @Component({
   selector: 'app-bar-chart',
   templateUrl: './bar-chart.component.html',
@@ -46,6 +59,11 @@ export class BarChartComponent implements OnInit {
   showUnfulfilled: boolean = false; // Controla si se muestran órdenes con fulfilled: false
   isComparisonMode: boolean = true; // true = comparación, false = rango único
 
+  // Product lists
+  recentProducts: Publication[] = [];
+  topSellingProducts: Publication[] = [];
+  productsLoading: boolean = true;
+
   constructor(private http: HttpClient, private datePipe: DatePipe) {
     this.dateRangeForm = new FormGroup({
       start: new FormControl(),
@@ -62,6 +80,40 @@ export class BarChartComponent implements OnInit {
   ngOnInit(): void {
     // Por defecto: cargar últimas 2 semanas
     this.onPeriodChange('2weeks');
+    // Cargar publicaciones
+    this.loadPublications();
+  }
+
+  /**
+   * Carga publicaciones y las divide en recientes y más vendidas
+   */
+  loadPublications(): void {
+    this.productsLoading = true;
+
+    this.http.get<Publication[]>(`${environment.apiUrl}/items`).subscribe({
+      next: (publications) => {
+        // Filtrar solo publicaciones activas
+        const activePublications = publications.filter(p => p.status === 'active');
+
+        // Últimos publicados: ordenar por ID (asumiendo IDs más altos = más recientes)
+        this.recentProducts = [...activePublications]
+          .sort((a, b) => b.id.localeCompare(a.id))
+          .slice(0, 3);
+
+        // Más vendidos: ordenar por sold_quantity
+        this.topSellingProducts = [...activePublications]
+          .filter(p => (p.sold_quantity || 0) > 0)
+          .sort((a, b) => (b.sold_quantity || 0) - (a.sold_quantity || 0))
+          .slice(0, 4);
+
+        this.productsLoading = false;
+        console.log(`📦 Publicaciones cargadas: ${publications.length} total, ${activePublications.length} activas`);
+      },
+      error: (error) => {
+        console.error('Error al cargar publicaciones:', error);
+        this.productsLoading = false;
+      }
+    });
   }
 
   /**
@@ -744,6 +796,10 @@ export class BarChartComponent implements OnInit {
         background: {
           fill: 'transparent'
         },
+        animation: {
+          enabled: true,
+          duration: 800
+        },
         series: [
           {
             type: 'line',
@@ -751,13 +807,16 @@ export class BarChartComponent implements OnInit {
             yKey: 'period1',
             yName: period1Name,
             stroke: '#2EC291',  // Green
-            strokeWidth: 3,
+            strokeWidth: 2.5,
             marker: {
               enabled: true,
-              size: 6,
+              size: 5,
               fill: '#2EC291',
               stroke: '#ffffff',
               strokeWidth: 2
+            },
+            interpolation: {
+              type: 'smooth'
             }
           },
           {
@@ -766,13 +825,16 @@ export class BarChartComponent implements OnInit {
             yKey: 'period2',
             yName: period2Name,
             stroke: '#3B82F6',  // Blue
-            strokeWidth: 3,
+            strokeWidth: 2.5,
             marker: {
               enabled: true,
-              size: 6,
+              size: 5,
               fill: '#3B82F6',
               stroke: '#ffffff',
               strokeWidth: 2
+            },
+            interpolation: {
+              type: 'smooth'
             }
           }
         ],
@@ -840,6 +902,10 @@ export class BarChartComponent implements OnInit {
         background: {
           fill: 'transparent'
         },
+        animation: {
+          enabled: true,
+          duration: 800
+        },
         series: [
           {
             type: 'bar',
@@ -848,7 +914,8 @@ export class BarChartComponent implements OnInit {
             yName: 'Ventas',
             fill: '#3B82F6',
             strokeWidth: 0,
-            fillOpacity: 0.9
+            fillOpacity: 0.85,
+            cornerRadius: 4
           }
         ],
         axes: [
