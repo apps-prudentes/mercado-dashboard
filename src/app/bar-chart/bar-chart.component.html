@@ -89,6 +89,12 @@
         </div>
         <div *ngIf="!productsLoading && recentProducts.length > 0" class="products-list">
           <div *ngFor="let product of recentProducts" class="product-item">
+            <div class="product-thumbnail">
+              <img *ngIf="product.thumbnail" [src]="product.thumbnail" [alt]="product.title" class="thumbnail-img">
+              <div *ngIf="!product.thumbnail" class="thumbnail-placeholder">
+                <mat-icon>image</mat-icon>
+              </div>
+            </div>
             <div class="product-info">
               <div class="product-title-row">
                 <p class="product-title">{{ product.title }}</p>
@@ -121,6 +127,12 @@
         <div *ngIf="!productsLoading && topSellingProducts.length > 0" class="products-list">
           <div *ngFor="let product of topSellingProducts; let i = index" class="product-item">
             <span class="product-rank">{{ i + 1 }}</span>
+            <div class="product-thumbnail">
+              <img *ngIf="product.thumbnail" [src]="product.thumbnail" [alt]="product.title" class="thumbnail-img">
+              <div *ngIf="!product.thumbnail" class="thumbnail-placeholder">
+                <mat-icon>image</mat-icon>
+              </div>
+            </div>
             <div class="product-info">
               <div class="product-title-row">
                 <p class="product-title">{{ product.title }}</p>
