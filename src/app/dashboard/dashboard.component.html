@@ -1,8 +1,8 @@
 <!-- Page Header -->
-<div class="page-header">
+<!-- <div class="page-header">
   <h1 class="page-title">Órdenes</h1>
   <p class="page-description">Historial completo de pedidos cumplidos</p>
-</div>
+</div> -->
 
 <!-- Grid Card -->
 <div class="card grid-card">
@@ -15,17 +15,9 @@
 
   <div class="grid-container">
     <mat-spinner *ngIf="isLoading" diameter="50" class="grid-spinner"></mat-spinner>
-    <ag-grid-angular
-      *ngIf="!isLoading"
-      class="ag-theme-alpine grid-table"
-      [rowData]="rowData"
-      [columnDefs]="columnDefs"
-      [defaultColDef]="defaultColDef"
-      [pagination]="true"
-      [paginationPageSize]="100"
-      [animateRows]="true"
-      (gridReady)="onGridReady($event)"
-    >
+    <ag-grid-angular *ngIf="!isLoading" class="ag-theme-alpine grid-table" [rowData]="rowData" [columnDefs]="columnDefs"
+      [defaultColDef]="defaultColDef" [pagination]="true" [paginationPageSize]="100" [animateRows]="true"
+      (gridReady)="onGridReady($event)">
     </ag-grid-angular>
   </div>
 </div>

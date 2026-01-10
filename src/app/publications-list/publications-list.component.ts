@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
+import { UserPreferencesService, PublicationFilters } from '../services/user-preferences.service';
 
 interface Publication {
   id: string;
@@ -86,11 +87,53 @@ export class PublicationsListComponent implements OnInit {
 
   constructor(
     private http: HttpClient,
-    private router: Router
+    private router: Router,
+    private userPreferencesService: UserPreferencesService
   ) {}
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
+    // Cargar preferencias guardadas antes de cargar publicaciones
+    await this.loadSavedPreferences();
     this.loadPublications();
+  }
+
+  /**
+   * Carga las preferencias de filtros guardadas
+   * Nota: NO carga el término de búsqueda (siempre inicia vacío)
+   */
+  private async loadSavedPreferences(): Promise<void> {
+    try {
+      const savedFilters = await this.userPreferencesService.getPublicationFilters();
+      if (savedFilters) {
+        // No cargar searchQuery - siempre inicia vacío
+        this.statusFilter = savedFilters.statusFilter || '';
+        this.listingTypeFilter = savedFilters.listingTypeFilter || '';
+        this.sortBy = savedFilters.sortBy || '';
+        console.log('✅ Filtros cargados desde preferencias:', savedFilters);
+      }
+    } catch (error) {
+      console.error('Error al cargar preferencias:', error);
+      // Continuar con valores por defecto si hay error
+    }
+  }
+
+  /**
+   * Guarda las preferencias actuales de filtros
+   * Nota: NO guarda el término de búsqueda (solo filtros estructurados)
+   */
+  private async saveCurrentFilters(): Promise<void> {
+    try {
+      const filters: PublicationFilters = {
+        searchQuery: '', // No guardar búsqueda - es temporal
+        statusFilter: this.statusFilter,
+        listingTypeFilter: this.listingTypeFilter,
+        sortBy: this.sortBy
+      };
+      await this.userPreferencesService.savePublicationFilters(filters);
+    } catch (error) {
+      console.error('Error al guardar preferencias:', error);
+      // No mostrar error al usuario, solo loguearlo
+    }
   }
 
   /**
@@ -206,6 +249,7 @@ export class PublicationsListComponent implements OnInit {
    */
   onSearch(): void {
     this.loadPublications(true);
+    // No guardar preferencias - la búsqueda es temporal
   }
 
   /**
@@ -214,6 +258,7 @@ export class PublicationsListComponent implements OnInit {
   clearSearch(): void {
     this.searchQuery = '';
     this.loadPublications(true);
+    // No guardar preferencias - la búsqueda es temporal
   }
 
   /**
@@ -221,6 +266,7 @@ export class PublicationsListComponent implements OnInit {
    */
   onStatusFilterChange(): void {
     this.loadPublications(true);
+    this.saveCurrentFilters();
   }
 
   /**
@@ -228,6 +274,7 @@ export class PublicationsListComponent implements OnInit {
    */
   onListingTypeFilterChange(): void {
     this.loadPublications(true);
+    this.saveCurrentFilters();
   }
 
   /**
@@ -235,6 +282,7 @@ export class PublicationsListComponent implements OnInit {
    */
   onSortChange(): void {
     this.loadPublications(true);
+    this.saveCurrentFilters();
   }
 
   /**
@@ -246,6 +294,7 @@ export class PublicationsListComponent implements OnInit {
     this.listingTypeFilter = '';
     this.sortBy = '';
     this.loadPublications(true);
+    this.saveCurrentFilters();
   }
 
   /**
