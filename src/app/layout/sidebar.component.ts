@@ -26,6 +26,11 @@ export class SidebarComponent {
       route: '/analytics'
     },
     {
+      label: 'Órdenes',
+      icon: 'receipt_long',
+      route: '/orders'
+    },
+    {
       label: 'Publicar',
       icon: 'add_box',
       route: '/publish'
