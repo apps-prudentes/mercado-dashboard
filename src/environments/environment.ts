@@ -3,8 +3,8 @@ export const environment = {
     apiUrl: 'http://localhost:3000/api',
     appwrite: {
         endpoint: 'https://nyc.cloud.appwrite.io/v1',
-        projectId: '6945f16200205ab1a28e',
-        databaseId: '695ef9f00023c888da5e', // ID de la base de datos
+        projectId: '697a48140027955e784e',
+        databaseId: '697a5575001e861c57a2', // ID de la base de datos
         collections: {
             userPreferences: 'user_preferences' // ID de la colección de preferencias
         }
