@@ -27,8 +27,8 @@ const PORT = process.env.PORT || 3000;
 app.use(cors({
   origin: [
     'http://localhost:4200',
-    'https://omargaxiola.com',
-    'https://mercado-libre-dashboard.vercel.app'
+    'https://tufirma.app',
+    'https://mercado-dashboard-hazel.vercel.app'
   ],
   credentials: true
 }));

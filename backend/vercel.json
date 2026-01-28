@@ -15,7 +15,7 @@
     "env": {
         "APP_ID": "@app_id",
         "APP_SECRET": "@app_secret",
-        "REDIRECT_URI": "https://omargaxiola.com/api/callback",
+        "REDIRECT_URI": "https://tufirma.app/api/callback",
         "PORT": "3000"
     }
 }
