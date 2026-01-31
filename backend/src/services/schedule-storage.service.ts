@@ -7,7 +7,7 @@ import {
 } from '../types/schedule.types';
 
 /**
- * Servicio para guardar/leer/actualizar programaciones en Appwrite
+ * Servicio para guardar/leer/actualizar programaciones en Appwrite 
  */
 export class ScheduleStorageService {
   private databases: Databases;
