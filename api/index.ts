@@ -169,7 +169,7 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   });
 });
 
-// Start server for local development only (not in Vercel) 
+// Start server for local development only (not in Vercel)
 if (!process.env['VERCEL']) {
   const PORT = process.env['PORT'] || 3000;
   app.listen(PORT, () => {
