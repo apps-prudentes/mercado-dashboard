@@ -1,91 +1,90 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { AIVariationsService } from '../../backend/src/services/ai-variations.service';
+import { Client as QStashClient } from '@upstash/qstash';
 import { ScheduleStorageService } from '../../backend/src/services/schedule-storage.service';
-import { PublicationSchedulerService } from '../../backend/src/services/publication-scheduler.service';
-import { Client } from 'node-appwrite';
-import { mlAuth } from '../../backend/src/auth/oauth';
-import dotenv from 'dotenv';
+import { Client as AppwriteClient } from 'node-appwrite';
+import * as dotenv from 'dotenv';
 
 dotenv.config();
 
 /**
  * Cron Job para publicaciones automáticas
- * Se ejecuta cada hora automáticamente
+ * Trigger: Se ejecuta cada hora
+ * Rol: Fan-out. Busca qué hay que publicar y lo encola en QStash.
  */
 export default async (req: VercelRequest, res: VercelResponse) => {
   try {
-    console.log('\n🕐 [CRON] Auto-publish job started at', new Date().toISOString());
+    console.log('\n🕐 [CRON] Auto-publish trigger started at', new Date().toISOString());
 
-    // Validar secret (Vercel envía esto automáticamente)
+    // 1. Validar secret (Vercel envía esto automáticamente)
     const authHeader = req.headers.authorization;
-    const cronSecret = process.env.CRON_SECRET;
+    const cronSecret = process.env['CRON_SECRET'];
 
-    // En Vercel, los cron jobs vienen con header "authorization: Bearer <token>"
-    // Si no coincide el secret, rechazar
     if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
       console.warn('⚠️ [CRON] Unauthorized access attempt');
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    // Inicializar cliente de Appwrite
-    const appwriteClient = new Client()
-      .setEndpoint(process.env.APPWRITE_ENDPOINT || 'https://nyc.cloud.appwrite.io/v1')
-      .setProject(process.env.APPWRITE_PROJECT_ID || '697a48140027955e784e')
-      .setKey(process.env.APPWRITE_API_KEY || '');
+    // 2. Inicializar clientes
+    const appwriteClient = new AppwriteClient()
+      .setEndpoint(process.env['APPWRITE_ENDPOINT'] || 'https://nyc.cloud.appwrite.io/v1')
+      .setProject(process.env['APPWRITE_PROJECT_ID'] || '697a48140027955e784e')
+      .setKey(process.env['APPWRITE_API_KEY'] || '');
 
-    const databaseId = process.env.APPWRITE_DATABASE_ID || '697a5575001e861c57a2';
+    const databaseId = process.env['APPWRITE_DATABASE_ID'] || '697a5575001e861c57a2';
+    const storageService = new ScheduleStorageService(appwriteClient as any, databaseId);
 
-    // Inicializar servicios
-    const aiService = new AIVariationsService();
-    const storageService = new ScheduleStorageService(appwriteClient, databaseId);
-    const schedulerService = new PublicationSchedulerService(aiService, storageService);
+    const qstashClient = new QStashClient({
+      token: process.env['QSTASH_TOKEN'] || '',
+    });
 
-    // Obtener token de MercadoLibre
-    console.log('🔑 [CRON] Obteniendo token de ML...');
-    const mlToken = await mlAuth.getToken();
-
-    if (!mlToken) {
-      throw new Error('No se pudo obtener token de MercadoLibre');
-    }
-
-    // Obtener programaciones listas para publicar
+    // 3. Obtener programaciones listas para publicar
     console.log('📋 [CRON] Buscando programaciones listas...');
     const schedulesReadyToPublish = await storageService.getSchedulesReadyToPublish();
 
-    console.log(`📦 [CRON] Encontradas ${schedulesReadyToPublish.length} programaciones para publicar`);
+    console.log(`📦 [CRON] Encontradas ${schedulesReadyToPublish.length} programaciones para encolar`);
 
     if (schedulesReadyToPublish.length === 0) {
       console.log('✅ [CRON] No hay programaciones pendientes');
       return res.json({
         success: true,
         message: 'No scheduled publications to process',
-        processed: 0,
-        successful: 0,
-        failed: 0,
-        timestamp: new Date().toISOString(),
+        enqueued: 0,
       });
     }
 
-    // Procesar cada programación
-    const result = await schedulerService.processScheduledPublications(
-      schedulesReadyToPublish,
-      mlToken
-    );
+    // 4. Encolar cada una en QStash (Fan-out)
+    // El host debe ser dinámico basándose en la URL actual o una variable de entorno
+    // Usaremos la URL de producción o el host del request
+    const protocol = req.headers['x-forwarded-proto'] || 'https';
+    const host = req.headers['host'];
+    const jobUrl = `${protocol}://${host}/api/jobs/publish-item`;
 
-    console.log(`✅ [CRON] Cron job completado: ${result.successful}/${result.processed} exitosas`);
+    console.log(`🔗 [CRON] Apuntando jobs a: ${jobUrl}`);
+
+    const publishPromises = schedulesReadyToPublish.map((schedule) => {
+      console.log(`📤 [CRON] Encolando schedule: ${schedule.$id}`);
+      return qstashClient.publishJSON({
+        url: jobUrl,
+        body: {
+          scheduleId: schedule.$id,
+        },
+        // Puedes agregar retries específicos aquí si quieres
+        retries: 3,
+      });
+    });
+
+    await Promise.all(publishPromises);
+
+    console.log(`✅ [CRON] Todas las publicaciones encoladas exitosamente`);
 
     return res.json({
       success: true,
-      message: 'Cron job completed successfully',
-      processed: result.processed,
-      successful: result.successful,
-      failed: result.failed,
+      message: 'Jobs enqueued successfully',
+      enqueued: schedulesReadyToPublish.length,
       timestamp: new Date().toISOString(),
     });
   } catch (error: any) {
-    console.error('❌ [CRON] Error en cron job:', error.message);
-    console.error('Stack:', error.stack);
-
+    console.error('❌ [CRON] Error en disparador de cron:', error.message);
     return res.status(500).json({
       success: false,
       error: error.message,

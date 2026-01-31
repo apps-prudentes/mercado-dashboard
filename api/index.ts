@@ -1,6 +1,6 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
+import * as dotenv from 'dotenv';
 import axios from 'axios';
 import { mlAuth } from '../backend/src/auth/oauth';
 import ordersRouter from '../backend/src/routes/orders';
@@ -24,7 +24,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Health check endpoint
-app.get('/api', (req, res) => {
+app.get('/api', (req: Request, res: Response) => {
   res.json({
     status: 'running',
     message: 'MercadoLibre Dashboard API',
@@ -33,7 +33,7 @@ app.get('/api', (req, res) => {
 });
 
 // Debug endpoint to get current token
-app.get('/api/debug/token', async (req, res) => {
+app.get('/api/debug/token', async (req: Request, res: Response) => {
   try {
     await (mlAuth as any).loadTokensAsync?.() || Promise.resolve();
     const tokenData = (mlAuth as any).tokenData;
@@ -46,12 +46,6 @@ app.get('/api/debug/token', async (req, res) => {
     }
 
     const scopesArray = tokenData.scope?.split(' ') || [];
-
-    console.log('🔑 Token Debug Info (from /api/debug/token):');
-    console.log('  - Token length:', tokenData.access_token?.length || 0);
-    console.log('  - Full TOKEN:', tokenData.access_token);
-    console.log('  - Refresh Token:', tokenData.refresh_token);
-    console.log('  - Scopes granted:', tokenData.scope || 'NO SCOPES');
 
     res.json({
       hasToken: true,
@@ -76,10 +70,10 @@ app.get('/api/debug/token', async (req, res) => {
 });
 
 // Check user/seller status
-app.get('/api/user/status', async (req, res) => {
+app.get('/api/user/status', async (req: Request, res: Response) => {
   try {
     const token = await mlAuth.getToken();
-    console.log(token)
+
     // Get user info
     const userResponse = await axios.get('https://api.mercadolibre.com/users/me', {
       headers: { Authorization: `Bearer ${token}` }
@@ -109,18 +103,16 @@ app.get('/api/user/status', async (req, res) => {
       details: error.response?.data || error.message
     });
   }
-
-
 });
 
 // OAuth authorization endpoint
-app.get('/api/auth', (req, res) => {
+app.get('/api/auth', (req: Request, res: Response) => {
   const authUrl = mlAuth.getAuthorizationUrl();
   res.redirect(authUrl);
 });
 
 // OAuth callback endpoint
-app.get('/api/callback', async (req, res) => {
+app.get('/api/callback', async (req: Request, res: Response) => {
   const { code } = req.query;
 
   if (!code || typeof code !== 'string') {
@@ -132,127 +124,44 @@ app.get('/api/callback', async (req, res) => {
     await mlAuth.getAccessToken(code);
     res.send(`
       <html>
-        <head>
-          <style>
-            body {
-              font-family: Arial, sans-serif;
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              height: 100vh;
-              margin: 0;
-              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            }
-            .container {
-              background: white;
-              padding: 40px;
-              border-radius: 10px;
-              box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-              text-align: center;
-            }
-            h1 { color: #333; margin-bottom: 10px; }
-            p { color: #666; margin-bottom: 20px; }
-            .success { color: #4CAF50; font-size: 48px; margin-bottom: 20px; }
-            a {
-              display: inline-block;
-              background: #667eea;
-              color: white;
-              text-decoration: none;
-              padding: 12px 24px;
-              border-radius: 6px;
-              margin-top: 15px;
-            }
-          </style>
-        </head>
         <body>
-          <div class="container">
-            <div class="success">✅</div>
-            <h1>¡Autorización exitosa!</h1>
-            <p>Tu app ha sido autorizada correctamente.</p>
-            <a href="/">Ir al Dashboard</a>
-          </div>
+          <h1>¡Autorización exitosa!</h1>
+          <a href="/">Ir al Dashboard</a>
         </body>
       </html>
     `);
   } catch (error) {
-    console.error('Error in callback:', error);
-    res.status(500).send(`
-      <html>
-        <head>
-          <style>
-            body {
-              font-family: Arial, sans-serif;
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              height: 100vh;
-              margin: 0;
-              background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            }
-            .container {
-              background: white;
-              padding: 40px;
-              border-radius: 10px;
-              box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-              text-align: center;
-            }
-            h1 { color: #333; margin-bottom: 10px; }
-            p { color: #666; }
-            .error { color: #f5576c; font-size: 48px; margin-bottom: 20px; }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <div class="error">❌</div>
-            <h1>Error en la autorización</h1>
-            <p>Hubo un problema al autorizar la app. Por favor intenta de nuevo.</p>
-          </div>
-        </body>
-      </html>
-    `);
+    res.status(500).send('Error en la autorización');
   }
 });
 
-// Inject token endpoint (for local development testing)
-app.post('/api/auth/inject-token', async (req, res) => {
+// Inject token endpoint
+app.post('/api/auth/inject-token', async (req: Request, res: Response) => {
   try {
     const { access_token, refresh_token, expires_in, scope } = req.body;
-
-    if (!access_token || !refresh_token) {
-      return res.status(400).json({
-        error: 'Missing required fields',
-        message: 'Both access_token and refresh_token are required'
-      });
-    }
-
     await mlAuth.injectToken(access_token, refresh_token, expires_in, scope);
-
-    res.json({
-      success: true,
-      message: 'Token injected successfully! Your backend is now authenticated.',
-      scope: scope || 'offline_access read write'
-    });
+    res.json({ success: true });
   } catch (error: any) {
-    console.error('Error injecting token:', error);
-    res.status(500).json({
-      error: 'Failed to inject token',
-      message: error.message
-    });
+    res.status(500).json({ error: error.message });
   }
 });
 
 // API Routes
-console.log('📦 Registering API routes...');
 app.use('/api/orders', ordersRouter);
 app.use('/api/shipments', shipmentsRouter);
 app.use('/api/items', itemsRouter);
 app.use('/api/images', imagesRouter);
 app.use('/api/categories', categoriesRouter);
 app.use('/api', schedulesRouter);
-console.log('✅ All routes registered (including /api/categories)');
+
+// NEW: Job handler for local testing
+import publishItemJob from './jobs/publish-item';
+app.post('/api/jobs/publish-item', async (req: Request, res: Response) => {
+  await publishItemJob(req as any, res as any);
+});
 
 // Error handling middleware
-app.use((err: any, req: any, res: any, next: any) => {
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   console.error('Unhandled error:', err);
   res.status(500).json({
     error: 'Internal server error',

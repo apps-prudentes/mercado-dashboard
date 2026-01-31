@@ -7,6 +7,14 @@
     "framework": "angular",
     "rewrites": [
         {
+            "source": "/api/cron/(.*)",
+            "destination": "/api/cron/$1"
+        },
+        {
+            "source": "/api/jobs/(.*)",
+            "destination": "/api/jobs/$1"
+        },
+        {
             "source": "/api/(.*)",
             "destination": "/api/index"
         },
@@ -24,6 +32,10 @@
     "crons": [
         {
             "path": "/api/cron/auto-publish",
+            "schedule": "0 * * * *"
+        },
+        {
+            "path": "/api/cron/refresh-tokens",
             "schedule": "0 * * * *"
         }
     ]

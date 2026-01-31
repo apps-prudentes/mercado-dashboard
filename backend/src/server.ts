@@ -3,7 +3,6 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
-import cron from 'node-cron';
 import axios from 'axios';
 import { mlAuth } from './auth/oauth';
 
@@ -219,19 +218,6 @@ app.get('/callback', async (req: Request, res: Response) => {
         </body>
       </html>
     `);
-  }
-});
-
-// Schedule token refresh every hour
-cron.schedule('0 * * * *', async () => {
-  console.log('🔄 Running scheduled token refresh check...');
-  if (mlAuth.hasValidToken() && mlAuth.isTokenExpired()) {
-    try {
-      await mlAuth.refreshAccessToken();
-      console.log('✅ Token refreshed successfully');
-    } catch (error) {
-      console.error('❌ Error refreshing token:', error);
-    }
   }
 });
 

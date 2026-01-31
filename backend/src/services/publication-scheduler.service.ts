@@ -187,6 +187,11 @@ export class PublicationSchedulerService {
 
       return newItemId;
     } catch (error: any) {
+      if (error.response) {
+        console.error('❌ Error detallado de MercadoLibre:', JSON.stringify(error.response.data, null, 2));
+        const mlError = error.response.data.message || 'Error desconocido de ML';
+        throw new Error(`ML Error: ${mlError}`);
+      }
       console.error('❌ Error duplicando publicación:', error.message);
       throw new Error('No se pudo publicar el item en ML');
     }
