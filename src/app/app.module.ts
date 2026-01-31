@@ -1,3 +1,4 @@
+// Initial configuration for MercadoLibre Dashboard - Vercel Fix
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 
