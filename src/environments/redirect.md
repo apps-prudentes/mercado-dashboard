@@ -1,0 +1,1 @@
+https://auth.mercadolibre.com.mx/authorization?response_type=code&client_id=7318516108220477&redirect_uri=https://tufirma.app

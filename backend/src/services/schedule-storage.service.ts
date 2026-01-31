@@ -318,7 +318,9 @@ export class ScheduleStorageService {
 
     if (frequency.unit === 'hours') {
       now.setHours(now.getHours() + (frequency.interval || 1));
-    } else if (frequency.unit === 'days') {
+    } else if (frequency.unit === 'minutes') {
+      now.setMinutes(now.getMinutes() + (frequency.interval || 1));
+    } else {
       now.setDate(now.getDate() + (frequency.interval || 1));
     }
 

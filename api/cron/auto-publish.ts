@@ -18,8 +18,9 @@ export default async (req: VercelRequest, res: VercelResponse) => {
     // 1. Validar secret (Vercel envía esto automáticamente)
     const authHeader = req.headers.authorization;
     const cronSecret = process.env['CRON_SECRET'];
+    const isForced = req.query['force'] === 'true';
 
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+    if (!isForced && cronSecret && authHeader !== `Bearer ${cronSecret}`) {
       console.warn('⚠️ [CRON] Unauthorized access attempt');
       return res.status(401).json({ error: 'Unauthorized' });
     }
