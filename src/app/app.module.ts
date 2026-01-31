@@ -7,6 +7,7 @@ import { DashboardComponent } from './dashboard/dashboard.component';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { AgGridModule } from 'ag-grid-angular';
 import { LoginComponent } from './auth/login/login.component';
+import { AuthModule } from './auth/auth.module';
 import { AuthInterceptor } from './interceptors/auth.interceptor';
 import { CachingInterceptor } from './interceptors/caching.interceptor';
 import { NavBarComponent } from './nav-bar/nav-bar.component';
@@ -53,7 +54,6 @@ import { ViewHistoryDialogComponent } from './auto-publications/dialogs/view-his
 @NgModule({
   declarations: [
     AppComponent,
-    LoginComponent,
     DashboardComponent,
     NavBarComponent,
     BarChartComponent,
@@ -77,6 +77,7 @@ import { ViewHistoryDialogComponent } from './auto-publications/dialogs/view-his
     BrowserModule,
     AppRoutingModule,
     HttpClientModule,
+    AuthModule,
     AgGridModule,
     AgChartsAngularModule,
     BrowserAnimationsModule,
