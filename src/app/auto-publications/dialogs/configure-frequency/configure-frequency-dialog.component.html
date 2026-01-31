@@ -1,0 +1,86 @@
+<h2 mat-dialog-title>{{ mode === 'create' ? '➕ Crear Programación' : '⚙️ Editar Programación' }}</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="form">
+    <!-- Item Display (solo en modo crear con producto seleccionado) -->
+    <div *ngIf="mode === 'create' && itemTitle" class="product-display">
+      <mat-icon>check_circle</mat-icon>
+      <div>
+        <p class="product-label">Producto seleccionado</p>
+        <p class="product-name">{{ itemTitle }}</p>
+      </div>
+    </div>
+
+    <!-- Item Selection (solo en modo crear sin producto seleccionado) -->
+    <mat-form-field *ngIf="mode === 'create' && !itemTitle" appearance="fill" class="full-width">
+      <mat-label>Producto</mat-label>
+      <input matInput formControlName="itemId" placeholder="ID del producto (ej: MLM2041582612)">
+      <mat-error *ngIf="form.get('itemId')?.hasError('required')">
+        El producto es requerido
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Frequency Configuration -->
+    <div formGroupName="frequency" class="frequency-group">
+      <div class="frequency-row">
+        <mat-form-field appearance="fill" class="interval-field">
+          <mat-label>Intervalo</mat-label>
+          <mat-select formControlName="interval">
+            <mat-option *ngFor="let interval of frequencyIntervals" [value]="interval">
+              {{ interval }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill" class="unit-field">
+          <mat-label>Unidad</mat-label>
+          <mat-select formControlName="unit">
+            <mat-option value="hours">Hora(s)</mat-option>
+            <mat-option value="days">Día(s)</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <p class="frequency-text">{{ frequencyText }}</p>
+    </div>
+
+    <!-- Variar Descripción -->
+    <mat-slide-toggle formControlName="variateDescription" class="full-width">
+      <span>🔄 Variar descripción</span>
+      <p class="toggle-hint">La IA generará descripciones diferentes para cada publicación</p>
+    </mat-slide-toggle>
+
+    <!-- Máximas publicaciones -->
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Máximas publicaciones</mat-label>
+      <input matInput type="number" formControlName="maxPublications" placeholder="0 = ilimitado">
+      <mat-hint>Deja en 0 para publicar indefinidamente</mat-hint>
+    </mat-form-field>
+
+    <!-- Preview -->
+    <mat-card class="preview-card">
+      <mat-card-header>
+        <mat-card-title>⏰ Vista Previa</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="preview-item">
+          <strong>Frecuencia:</strong> {{ frequencyText }}
+        </div>
+        <div class="preview-item">
+          <strong>Variar descripción:</strong> {{ form.get('variateDescription')?.value ? '✓ Sí' : '✗ No' }}
+        </div>
+        <div class="preview-item" *ngIf="form.get('maxPublications')?.value">
+          <strong>Máximas publicaciones:</strong> {{ form.get('maxPublications')?.value }}
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()" [disabled]="isSaving">Cancelar</button>
+  <button mat-raised-button color="primary" (click)="onSave()" [disabled]="!form.valid || isSaving">
+    <mat-spinner *ngIf="isSaving" diameter="20" style="display: inline-block; margin-right: 8px;"></mat-spinner>
+    {{ isSaving ? 'Guardando...' : (mode === 'create' ? 'Crear' : 'Guardar') }}
+  </button>
+</mat-dialog-actions>

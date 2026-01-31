@@ -1,5 +1,10 @@
 {
-    "/api": {
+    "/api/listings": {
+      "target": "https://api.mercadolibre.com",
+      "secure": false,
+      "changeOrigin": true
+    },
+    "/api/items": {
       "target": "https://api.mercadolibre.com",
       "secure": false,
       "changeOrigin": true

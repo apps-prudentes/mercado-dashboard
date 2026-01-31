@@ -1,0 +1,68 @@
+<h2 mat-dialog-title>📊 Historial: {{ data.schedule.originalTitle }}</h2>
+
+<mat-dialog-content>
+  <!-- Info Schedule -->
+  <div class="schedule-info">
+    <div class="info-item">
+      <strong>Programación activa:</strong>
+      <span [style.color]="data.schedule.isActive ? 'green' : 'orange'">
+        {{ data.schedule.isActive ? '✅ Activa' : '⏸️ Pausada' }}
+      </span>
+    </div>
+    <div class="info-item">
+      <strong>Próxima publicación:</strong>
+      <span>{{ formatDate(data.schedule.nextPublishAt) }}</span>
+    </div>
+    <div class="info-item">
+      <strong>Total publicaciones:</strong>
+      <span>{{ history.length }}</span>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="loading">
+    <mat-spinner diameter="30"></mat-spinner>
+    <p>Cargando historial...</p>
+  </div>
+
+  <!-- History List -->
+  <div *ngIf="!isLoading" class="history-list">
+    <div *ngIf="history.length === 0" class="empty">
+      <p>📭 No hay historial de publicaciones</p>
+    </div>
+
+    <mat-card *ngFor="let item of history; let i = index" class="history-item">
+      <div class="history-header">
+        <div class="history-number">#{{ i + 1 }}</div>
+        <div class="history-status" [style.color]="getStatusColor(item.status)">
+          {{ getStatusIcon(item.status) }} {{ item.status === 'success' ? 'Exitosa' : item.status === 'failed' ? 'Fallida' : 'Pendiente' }}
+        </div>
+        <div class="history-date">{{ formatDate(item.publishedAt) }}</div>
+      </div>
+
+      <div class="history-body">
+        <div class="title-field">
+          <strong>Título publicado:</strong>
+          <p>{{ item.publishedTitle }}</p>
+        </div>
+
+        <div *ngIf="item.newListingId" class="listing-field">
+          <strong>ID de publicación:</strong>
+          <a [href]="'https://articulo.mercadolibre.com.mx/' + item.newListingId" target="_blank">
+            ML-{{ item.newListingId }}
+            <mat-icon>open_in_new</mat-icon>
+          </a>
+        </div>
+
+        <div *ngIf="item.errorMessage" class="error-field">
+          <strong>Error:</strong>
+          <p>{{ item.errorMessage }}</p>
+        </div>
+      </div>
+    </mat-card>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onClose()">Cerrar</button>
+</mat-dialog-actions>

@@ -3,7 +3,6 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
-import cron from 'node-cron';
 import axios from 'axios';
 import { mlAuth } from './auth/oauth';
 
@@ -17,6 +16,7 @@ import shipmentsRouter from './routes/shipments';
 import itemsRouter from './routes/items';
 import imagesRouter from './routes/images';
 import categoriesRouter from './routes/categories';
+import schedulesRouter from './routes/schedules';
 
 dotenv.config();
 
@@ -78,6 +78,8 @@ app.use('/api/images', imagesRouter);
 console.log('  ✓ /api/images registered');
 app.use('/api/categories', categoriesRouter);
 console.log('  ✓ /api/categories registered');
+app.use('/api', schedulesRouter);
+console.log('  ✓ /api/schedules registered');
 
 // Endpoint de validación de sesión
 app.get('/api/auth/session', (req, res) => {
@@ -216,19 +218,6 @@ app.get('/callback', async (req: Request, res: Response) => {
         </body>
       </html>
     `);
-  }
-});
-
-// Schedule token refresh every hour
-cron.schedule('0 * * * *', async () => {
-  console.log('🔄 Running scheduled token refresh check...');
-  if (mlAuth.hasValidToken() && mlAuth.isTokenExpired()) {
-    try {
-      await mlAuth.refreshAccessToken();
-      console.log('✅ Token refreshed successfully');
-    } catch (error) {
-      console.error('❌ Error refreshing token:', error);
-    }
   }
 });
 

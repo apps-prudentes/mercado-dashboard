@@ -7,6 +7,14 @@
     "framework": "angular",
     "rewrites": [
         {
+            "source": "/api/cron/(.*)",
+            "destination": "/api/cron/$1"
+        },
+        {
+            "source": "/api/jobs/(.*)",
+            "destination": "/api/jobs/$1"
+        },
+        {
             "source": "/api/(.*)",
             "destination": "/api/index"
         },
@@ -18,7 +26,17 @@
     "functions": {
         "api/**/*.ts": {
             "memory": 1024,
-            "maxDuration": 10
+            "maxDuration": 60
         }
-    }
+    },
+    "crons": [
+        {
+            "path": "/api/cron/auto-publish",
+            "schedule": "0 * * * *"
+        },
+        {
+            "path": "/api/cron/refresh-tokens",
+            "schedule": "0 * * * *"
+        }
+    ]
 }

@@ -12,6 +12,12 @@
             "dest": "src/server.ts"
         }
     ],
+    "crons": [
+        {
+            "path": "/api/cron/auto-publish",
+            "schedule": "0 * * * *"
+        }
+    ],
     "env": {
         "APP_ID": "@app_id",
         "APP_SECRET": "@app_secret",

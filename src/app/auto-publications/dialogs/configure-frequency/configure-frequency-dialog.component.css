@@ -1,0 +1,97 @@
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.product-display {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  background: #e8f5e9;
+  border: 1px solid #c8e6c9;
+  border-radius: 4px;
+  color: #2e7d32;
+}
+
+.product-display mat-icon {
+  color: #4caf50;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.product-label {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #558b2f;
+}
+
+.product-name {
+  margin: 4px 0 0 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: #2e7d32;
+  line-height: 1.4;
+}
+
+.frequency-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.frequency-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.interval-field,
+.unit-field {
+  width: 100%;
+}
+
+.frequency-text {
+  margin: 0;
+  padding: 8px 12px;
+  background: #e3f2fd;
+  border-left: 3px solid #1976d2;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1565c0;
+  border-radius: 4px;
+}
+
+.toggle-hint {
+  margin: 0;
+  font-size: 12px;
+  color: #999;
+  margin-top: 4px;
+}
+
+.preview-card {
+  background: #f5f5f5;
+  margin-top: 8px;
+}
+
+.preview-item {
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+  font-size: 13px;
+}
+
+.preview-item:last-child {
+  border-bottom: none;
+}
+
+mat-dialog-actions {
+  gap: 8px;
+  margin-top: 16px;
+}
