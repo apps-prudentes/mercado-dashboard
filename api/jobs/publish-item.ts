@@ -19,12 +19,10 @@ export default async (req: VercelRequest, res: VercelResponse) => {
     const currentSigningKey = process.env['QSTASH_CURRENT_SIGNING_KEY'];
     const nextSigningKey = process.env['QSTASH_NEXT_SIGNING_KEY'];
 
-    /*
-  if (!signature || !currentSigningKey || !nextSigningKey) {
-    console.error('❌ [JOB] Missing signature or keys');
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-  */
+    if (!signature || !currentSigningKey || !nextSigningKey) {
+        console.error('❌ [JOB] Missing signature or keys');
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
 
     const receiver = new Receiver({
         currentSigningKey,
@@ -32,8 +30,6 @@ export default async (req: VercelRequest, res: VercelResponse) => {
     });
 
     try {
-        /* 
-        // COMENTADO TEMPORALMENTE PARA PRUEBAS LOCALES
         const isValid = await receiver.verify({
             signature,
             body: JSON.stringify(req.body),
@@ -43,8 +39,7 @@ export default async (req: VercelRequest, res: VercelResponse) => {
             console.warn('⚠️ [JOB] Invalid QStash signature');
             return res.status(401).json({ error: 'Invalid signature' });
         }
-        */
-        console.log('⚠️ [JOB] Signature verification bypassed for testing.');
+        console.log('✅ [JOB] QStash signature verified');
     } catch (err: any) {
         console.error('❌ [JOB] Verification error:', err.message);
         return res.status(500).json({ error: 'Internal verification error' });

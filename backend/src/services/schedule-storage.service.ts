@@ -96,7 +96,15 @@ export class ScheduleStorageService {
         queries as any
       );
 
-      return response.documents as any as ScheduledPublication[];
+      return response.documents.map((doc: any) => {
+        if (!doc.frequency && doc.frequencyInterval) {
+          doc.frequency = {
+            interval: doc.frequencyInterval,
+            unit: doc.frequencyUnit || 'hours'
+          };
+        }
+        return doc as ScheduledPublication;
+      });
     } catch (error: any) {
       console.error('❌ Error listando programaciones:', error.message);
       throw error;
@@ -114,7 +122,17 @@ export class ScheduleStorageService {
         scheduleId
       );
 
-      return response as any as ScheduledPublication;
+      const doc = response as any;
+
+      // Re-mapear frequency si viene plano de Appwrite
+      if (!doc.frequency && doc.frequencyInterval) {
+        doc.frequency = {
+          interval: doc.frequencyInterval,
+          unit: doc.frequencyUnit || 'hours'
+        };
+      }
+
+      return doc as ScheduledPublication;
     } catch (error: any) {
       console.error('❌ Error obteniendo programación:', error.message);
       throw error;
@@ -271,7 +289,15 @@ export class ScheduleStorageService {
         queries as any
       );
 
-      return response.documents as any as ScheduledPublication[];
+      return response.documents.map((doc: any) => {
+        if (!doc.frequency && doc.frequencyInterval) {
+          doc.frequency = {
+            interval: doc.frequencyInterval,
+            unit: doc.frequencyUnit || 'hours'
+          };
+        }
+        return doc as ScheduledPublication;
+      });
     } catch (error: any) {
       console.error('❌ Error obteniendo programaciones listas:', error.message);
       throw error;
@@ -284,10 +310,16 @@ export class ScheduleStorageService {
   private calculateNextPublishDate(frequency: any): string {
     const now = new Date();
 
+    if (!frequency || !frequency.unit) {
+      console.warn('⚠️ No frequency provided, setting default next publish to 24h');
+      now.setHours(now.getHours() + 24);
+      return now.toISOString();
+    }
+
     if (frequency.unit === 'hours') {
-      now.setHours(now.getHours() + frequency.interval);
+      now.setHours(now.getHours() + (frequency.interval || 1));
     } else if (frequency.unit === 'days') {
-      now.setDate(now.getDate() + frequency.interval);
+      now.setDate(now.getDate() + (frequency.interval || 1));
     }
 
     return now.toISOString();

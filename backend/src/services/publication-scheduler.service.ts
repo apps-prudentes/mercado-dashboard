@@ -201,14 +201,84 @@ export class PublicationSchedulerService {
    * Preparar datos para duplicar item
    */
   private prepareDuplicateItem(originalItem: MLItem, variation: any): any {
-    // Convertir logistic_type si es necesario
-    let shipping = originalItem.shipping || {};
+    // 1. Manejar Envío y Dimensiones
+    let shipping: any = originalItem.shipping || {};
     if (shipping.logistic_type === 'fulfillment') {
       shipping.logistic_type = 'xd_drop_off';
     }
 
-    return {
-      title: variation.title,
+    // 2. Limpiar y Preparar Atributos
+    const forbiddenAttrIds = [
+      'ITEM_CONDITION',
+      'PARENT_ITEM_ID',
+      'PACKAGE_HEIGHT', 'PACKAGE_WIDTH', 'PACKAGE_LENGTH', 'PACKAGE_WEIGHT',
+      'SELLER_PACKAGE_HEIGHT', 'SELLER_PACKAGE_WIDTH', 'SELLER_PACKAGE_LENGTH', 'SELLER_PACKAGE_WEIGHT'
+    ];
+
+    let cleanedAttributes = (originalItem.attributes || [])
+      .filter((attr: any) => !forbiddenAttrIds.includes(attr.id))
+      .map((attr: any) => ({
+        id: attr.id,
+        value_id: attr.value_id,
+        value_name: attr.value_name
+      }));
+
+    // 3. Extraer y agregar dimensiones con reglas de validación (Min 20g, Min 3cm)
+    const addDimension = (id: string, value: number, unit: 'cm' | 'g') => {
+      const minVal = unit === 'cm' ? 3 : 20;
+      const finalVal = Math.max(minVal, Math.floor(value));
+      console.log(`🚚 Preparando atributo ${id}: ${finalVal} ${unit}`);
+      cleanedAttributes.push({
+        id,
+        value_name: `${finalVal} ${unit}`,
+        value_type: 'number_unit',
+        values: [{
+          name: `${finalVal} ${unit}`,
+          struct: { number: finalVal, unit: unit }
+        }]
+      } as any);
+    };
+
+    if ((originalItem as any).shipping?.dimensions) {
+      console.log(`📦 Dimensiones detectadas en shipping.dimensions: ${(originalItem as any).shipping.dimensions}`);
+      const dims = this.parseShippingDimensions((originalItem as any).shipping.dimensions);
+      if (dims) {
+        addDimension('SELLER_PACKAGE_HEIGHT', dims.height, 'cm');
+        addDimension('SELLER_PACKAGE_WIDTH', dims.width, 'cm');
+        addDimension('SELLER_PACKAGE_LENGTH', dims.length, 'cm');
+        addDimension('SELLER_PACKAGE_WEIGHT', dims.weight, 'g');
+      }
+    } else {
+      console.log('🔍 Buscando dimensiones en atributos originales...');
+      const getVal = (ids: string[]) => {
+        for (const id of ids) {
+          const attr = originalItem.attributes?.find(a => a.id === id);
+          if (attr?.value_name) {
+            const match = attr.value_name.match(/(\d+(\.\d+)?)/);
+            return match ? parseFloat(match[1]) : null;
+          }
+        }
+        return null;
+      };
+
+      const h = getVal(['SELLER_PACKAGE_HEIGHT', 'PACKAGE_HEIGHT']) || 3;
+      const w = getVal(['SELLER_PACKAGE_WIDTH', 'PACKAGE_WIDTH']) || 3;
+      const l = getVal(['SELLER_PACKAGE_LENGTH', 'PACKAGE_LENGTH']) || 3;
+      const weight = getVal(['SELLER_PACKAGE_WEIGHT', 'PACKAGE_WEIGHT']) || 20;
+
+      addDimension('SELLER_PACKAGE_HEIGHT', h, 'cm');
+      addDimension('SELLER_PACKAGE_WIDTH', w, 'cm');
+      addDimension('SELLER_PACKAGE_LENGTH', l, 'cm');
+      addDimension('SELLER_PACKAGE_WEIGHT', weight, 'g');
+    }
+
+    // 4. Payload Final
+    // Limpiar shipping de dimensiones si las enviamos como atributos para evitar conflictos
+    const finalShipping = { ...shipping };
+    delete finalShipping.dimensions;
+
+    const payload: any = {
+      family_name: originalItem.family_name || originalItem.title,
       category_id: originalItem.category_id,
       price: originalItem.price,
       currency_id: originalItem.currency_id,
@@ -216,11 +286,33 @@ export class PublicationSchedulerService {
       condition: originalItem.condition,
       buying_mode: originalItem.buying_mode,
       listing_type_id: originalItem.listing_type_id,
-      pictures: originalItem.pictures,
-      attributes: originalItem.attributes,
+      pictures: originalItem.pictures.map(p => ({ source: p.secure_url || p.url || p.source })),
+      attributes: cleanedAttributes,
       sale_terms: originalItem.sale_terms,
-      shipping,
+      shipping: finalShipping,
     };
+
+    // Si viene de una variación de IA, actualizar el nombre
+    if (variation && (variation.title || variation.family_name)) {
+      payload.family_name = variation.title || variation.family_name;
+    }
+
+    console.log(`📦 Payload listo para duplicar (Atributos: ${cleanedAttributes.length})`);
+    return payload;
+  }
+
+  /**
+   * Parsea el string de dimensiones de ML (ej: "10x20x30,500")
+   */
+  private parseShippingDimensions(dimString: string) {
+    try {
+      const [dims, weight] = dimString.split(',');
+      const [h, w, l] = dims.split('x').map(Number);
+      if (!h || !w || !l || !weight) return null;
+      return { height: h, width: w, length: l, weight: Number(weight) };
+    } catch (e) {
+      return null;
+    }
   }
 
   /**

@@ -99,6 +99,7 @@ export interface CronJobResult {
 export interface MLItem {
   id: string;
   title: string;
+  family_name?: string;
   category_id: string;
   price: number;
   currency_id: string;
@@ -107,10 +108,11 @@ export interface MLItem {
   condition: 'new' | 'used';
   buying_mode: string;
   listing_type_id: string;
-  pictures: Array<{ source: string }>;
+  pictures: Array<{ source?: string; url?: string; secure_url?: string; id?: string }>;
   attributes: Array<{
     id: string;
     name: string;
+    value_id?: string | null;
     value_name?: string;
     value_type?: string;
   }>;
@@ -123,6 +125,7 @@ export interface MLItem {
     local_pick_up: boolean;
     free_shipping: boolean;
     logistic_type?: string;
+    dimensions?: string;
   };
   description?: string;
   date_created: string;

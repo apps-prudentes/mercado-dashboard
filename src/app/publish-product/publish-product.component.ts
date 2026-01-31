@@ -221,7 +221,7 @@ export class PublishProductComponent implements OnInit {
 
       // Pre-fill form with item data
       this.product = {
-        family_name: item.title,
+        family_name: item.family_name || item.title,
         category_id: item.category_id,
         price: item.price,
         currency_id: item.currency_id || 'MXN',
@@ -250,14 +250,31 @@ export class PublishProductComponent implements OnInit {
       sessionStorage.removeItem('duplicateItem');
 
       console.log('✅ Product form loaded with:', this.product);
-      console.log('📸 Pictures text:', this.picturesText);
 
       // Pre-cargar atributos fijos desde el producto original si existen
       if (item.attributes && Array.isArray(item.attributes)) {
         item.attributes.forEach((attr: any) => {
-          if (attr.id && attr.id in this.fixedAttributes) {
-            (this.fixedAttributes as any)[attr.id] = attr.value_name;
-            console.log(`✅ Pre-loaded fixed attribute ${attr.id}: ${attr.value_name}`);
+          if (!attr.id) return;
+
+          const attrIdLower = attr.id.toLowerCase();
+          // Mapear atributos de dimensiones (case-insensitive) y extraer solo números
+          if (attrIdLower in this.fixedAttributes) {
+            let value = attr.value_name || '';
+
+            // Extraer solo el número si es un campo de dimensiones/peso
+            // Ejemplo: "3 cm" -> 3, "20 g" -> 20, "0.5 kg" -> 0.5
+            const numericMatch = value.match(/(\d+(\.\d+)?)/);
+            if (numericMatch) {
+              const numValue = parseFloat(numericMatch[1]);
+
+              // Si es peso y viene en gramos, lo dejamos tal cual (el backend/submit lo manejará)
+              // Pero si viene en kg, también funciona.
+              (this.fixedAttributes as any)[attrIdLower] = numValue;
+            } else {
+              (this.fixedAttributes as any)[attrIdLower] = value;
+            }
+
+            console.log(`✅ Pre-loaded fixed attribute ${attrIdLower}: ${(this.fixedAttributes as any)[attrIdLower]}`);
           }
         });
       }
@@ -334,15 +351,26 @@ export class PublishProductComponent implements OnInit {
       } else if (isNaN(Number(value))) {
         this.attributeErrors[attrId] = 'Debe ser un número válido';
         isValid = false;
-      } else if (Number(value) <= 0) {
-        this.attributeErrors[attrId] = 'Debe ser mayor que 0';
-        isValid = false;
+      } else {
+        const numValue = Number(value);
+        // Validaciones mínimas de MercadoLibre
+        if (['seller_package_height', 'seller_package_width', 'seller_package_length'].includes(attrId) && numValue < 3) {
+          this.attributeErrors[attrId] = 'Mínimo 3 cm';
+          isValid = false;
+        } else if (attrId === 'seller_package_weight') {
+          // El usuario ingresa en kg, ML valida en gramos (mínimo 20g = 0.02kg pedido por el usuario)
+          if (numValue < 0.02) {
+            this.attributeErrors[attrId] = 'Mínimo 0.02 kg (20 g)';
+            isValid = false;
+          }
+        }
       }
       // Validación adicional para peso: si está en kg, debe ser decimal; si es grande, asumimos que está en g
       if (attrId === 'seller_package_weight' && value && !isNaN(Number(value))) {
         const numValue = Number(value);
-        if (numValue < 0.001) {
-          this.attributeErrors[attrId] = 'El peso es muy pequeño. Mínimo 0.001 kg (1 g)';
+        // El usuario ingresa en kg, ML valida en gramos (mínimo 20g = 0.02kg pedido por el usuario)
+        if (numValue < 0.02) {
+          this.attributeErrors[attrId] = 'Mínimo 0.02 kg (20 g)';
           isValid = false;
         } else if (numValue > 100000) {
           this.attributeErrors[attrId] = 'El peso es demasiado grande (máximo 100000 kg)';
@@ -454,27 +482,39 @@ export class PublishProductComponent implements OnInit {
       if (value !== undefined && value !== null && value !== '') {
         // Formato especial para MercadoLibre: dimensiones en cm, peso en g, solo enteros
         let formattedValue = String(value);
+        let numberValue = Math.floor(Number(value));
+        let unit = '';
 
         // Dimensiones: agregar " cm"
         if (['seller_package_height', 'seller_package_width', 'seller_package_length'].includes(attrId)) {
-          const intValue = Math.floor(Number(value));
-          formattedValue = `${intValue} cm`;
+          numberValue = Math.max(3, Math.floor(Number(value))); // Mínimo 3cm
+          formattedValue = `${numberValue} cm`;
+          unit = 'cm';
         }
         // Peso: convertir a gramos y agregar " g"
         else if (attrId === 'seller_package_weight') {
-          const numValue = Number(value);
-          // Si el valor está en kg, convertir a g
-          const grams = numValue > 1000 ? numValue : numValue * 1000;
-          const intValue = Math.floor(grams);
-          formattedValue = `${intValue} g`;
+          const rawWeight = Number(value);
+          // Si el valor es pequeño (ej: 0.01), multiplicamos por 1000 para gramos. 
+          // Si es grande (ej: 500), asumimos que ya son gramos.
+          const grams = rawWeight < 10 ? rawWeight * 1000 : rawWeight;
+          numberValue = Math.max(20, Math.floor(grams)); // Mínimo 20g (pedido por usuario)
+          formattedValue = `${numberValue} g`;
+          unit = 'g';
         }
 
         attributes.push({
-          id: attrId,
+          id: attrId.toUpperCase(), // ML prefiere IDs en mayúsculas
           name: attrId.replace(/_/g, ' '),
           value_name: formattedValue,
-          value_type: 'string'
-        });
+          value_type: 'number_unit',
+          values: [{
+            name: formattedValue,
+            struct: {
+              number: numberValue,
+              unit: unit
+            }
+          }]
+        } as any);
         console.log(`[PublishProduct] Added fixed attribute: ${attrId} = ${formattedValue}`);
       }
     });
@@ -846,7 +886,52 @@ export class PublishProductComponent implements OnInit {
         // Pre-llenar attributeValues con valores existentes del producto
         if (this.product.attributes && this.product.attributes.length > 0) {
           this.product.attributes.forEach(attr => {
-            this.attributeValues[attr.id] = attr.value_name;
+            // Buscar la definición del atributo en la categoría para saber su tipo
+            const catAttr = this.categoryAttributes.find(ca => ca.id === attr.id);
+            if (!catAttr) {
+              this.attributeValues[attr.id] = attr.value_name;
+              return;
+            }
+
+            console.log(`[PublishProduct] Pre-filling dynamic attribute ${attr.id} (${catAttr.value_type}):`, attr.value_name);
+
+            // Mapear según tipo para que los controles del formulario (select, color, etc.) funcionen
+            switch (catAttr.value_type) {
+              case 'list':
+                // Para listas, necesitamos el ID del valor para que el <select> lo marque como seleccionado
+                this.attributeValues[attr.id] = attr.value_id || attr.value_name;
+                break;
+
+              case 'number_unit':
+                // Para number_unit, el form usa sufijos _number y _unit
+                if (attr.values && attr.values[0] && (attr.values[0] as any).struct) {
+                  const struct = (attr.values[0] as any).struct;
+                  this.attributeValues[attr.id + '_number'] = struct.number;
+                  this.attributeValues[attr.id + '_unit'] = struct.unit;
+                } else if (attr.value_name) {
+                  // Fallback: intentar parsear el string (ej: "100 g")
+                  const match = attr.value_name.match(/(\d+(\.\d+)?)\s*(.*)/);
+                  if (match) {
+                    this.attributeValues[attr.id + '_number'] = parseFloat(match[1]);
+                    this.attributeValues[attr.id + '_unit'] = match[3].trim();
+                  }
+                }
+                break;
+
+              case 'boolean':
+                // MercadoLibre usa IDs específicos para Sí/No en muchas categorías
+                if (attr.value_id === '242085' || attr.value_name === 'Sí') {
+                  this.attributeValues[attr.id] = true;
+                } else if (attr.value_id === '242084' || attr.value_name === 'No') {
+                  this.attributeValues[attr.id] = false;
+                } else {
+                  this.attributeValues[attr.id] = attr.value_id || attr.value_name;
+                }
+                break;
+
+              default:
+                this.attributeValues[attr.id] = attr.value_name;
+            }
           });
         }
 
