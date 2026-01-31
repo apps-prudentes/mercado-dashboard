@@ -41,6 +41,11 @@ export class SidebarComponent {
       route: '/publications'
     },
     {
+      label: 'Automáticas',
+      icon: 'schedule',
+      route: '/auto-publications'
+    },
+    {
       label: 'Galería',
       icon: 'collections',
       route: '/gallery'

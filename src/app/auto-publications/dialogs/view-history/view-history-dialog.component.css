@@ -1,0 +1,149 @@
+.schedule-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 12px;
+  background: #f5f5f5;
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.info-item strong {
+  font-size: 12px;
+  color: #666;
+  text-transform: uppercase;
+}
+
+.info-item span {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.loading p {
+  color: #999;
+  font-size: 12px;
+  margin: 0;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: #999;
+}
+
+.history-item {
+  border-left: 3px solid #1976d2;
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #eee;
+  font-size: 12px;
+}
+
+.history-number {
+  font-weight: 700;
+  color: #666;
+}
+
+.history-status {
+  font-weight: 600;
+}
+
+.history-date {
+  color: #999;
+  font-size: 11px;
+}
+
+.history-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.title-field,
+.listing-field,
+.error-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.title-field strong,
+.listing-field strong,
+.error-field strong {
+  font-size: 12px;
+  color: #666;
+}
+
+.title-field p,
+.error-field p {
+  margin: 0;
+  font-size: 13px;
+  color: #333;
+  word-break: break-word;
+}
+
+.listing-field a {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #1976d2;
+  text-decoration: none;
+  font-size: 13px;
+}
+
+.listing-field a:hover {
+  text-decoration: underline;
+}
+
+.listing-field mat-icon {
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+}
+
+.error-field {
+  background: #ffebee;
+  padding: 8px;
+  border-radius: 4px;
+  border-left: 2px solid #c62828;
+}
+
+.error-field p {
+  color: #c62828;
+  margin: 0;
+}
+
+mat-dialog-actions {
+  gap: 8px;
+  margin-top: 16px;
+}

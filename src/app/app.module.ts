@@ -35,6 +35,8 @@ import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { SidebarComponent } from './layout/sidebar.component';
 import { ImageSourceSelectorComponent } from './components/image-source-selector/image-source-selector.component';
 import { TopNavComponent } from './layout/top-nav.component';
@@ -44,6 +46,9 @@ import { ToastComponent } from './shared/toast/toast.component';
 import { SettingsComponent } from './settings/settings.component';
 import { AnalyticsComponent } from './analytics/analytics.component';
 import { NotFoundComponent } from './not-found/not-found.component';
+import { AutoPublicationsComponent } from './auto-publications/auto-publications.component';
+import { ConfigureFrequencyDialogComponent } from './auto-publications/dialogs/configure-frequency/configure-frequency-dialog.component';
+import { ViewHistoryDialogComponent } from './auto-publications/dialogs/view-history/view-history-dialog.component';
 
 @NgModule({
   declarations: [
@@ -64,6 +69,9 @@ import { NotFoundComponent } from './not-found/not-found.component';
     ImageSourceSelectorComponent,
     AnalyticsComponent,
     NotFoundComponent,
+    AutoPublicationsComponent,
+    ConfigureFrequencyDialogComponent,
+    ViewHistoryDialogComponent,
   ],
   imports: [
     BrowserModule,
@@ -90,17 +98,18 @@ import { NotFoundComponent } from './not-found/not-found.component';
     MatSnackBarModule,
     MatPaginatorModule,
     MatProgressBarModule,
-    MatCheckboxModule
+    MatCheckboxModule,
+    MatDialogModule,
+    MatSlideToggleModule
   ],
   providers: [
     DatePipe,
-    // IMPORTANTE: CachingInterceptor DEBE ir ANTES que AuthInterceptor
-    // para que las respuestas cacheadas no pasen por autenticación
-    {
-      provide: HTTP_INTERCEPTORS,
-      useClass: CachingInterceptor,
-      multi: true
-    },
+    // IMPORTANTE: CachingInterceptor DESACTIVADO para debugging
+    // {
+    //   provide: HTTP_INTERCEPTORS,
+    //   useClass: CachingInterceptor,
+    //   multi: true
+    // },
     {
       provide: HTTP_INTERCEPTORS,
       useClass: AuthInterceptor,

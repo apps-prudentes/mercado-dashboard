@@ -8,6 +8,7 @@ import { BarChartComponent } from './bar-chart/bar-chart.component';
 import { AnalyticsComponent } from './analytics/analytics.component';
 import { PublishProductComponent } from './publish-product/publish-product.component';
 import { PublicationsListComponent } from './publications-list/publications-list.component';
+import { AutoPublicationsComponent } from './auto-publications/auto-publications.component';
 import { ImageGalleryComponent } from './image-gallery/image-gallery.component';
 import { SettingsComponent } from './settings/settings.component';
 import { NotFoundComponent } from './not-found/not-found.component';
@@ -28,6 +29,7 @@ const routes: Routes = [
       { path: 'orders', component: DashboardComponent },
       { path: 'publish', component: PublishProductComponent },
       { path: 'publications', component: PublicationsListComponent },
+      { path: 'auto-publications', component: AutoPublicationsComponent },
       { path: 'gallery', component: ImageGalleryComponent },
       { path: 'settings', component: SettingsComponent },
       { path: '', redirectTo: 'analytics', pathMatch: 'full' }

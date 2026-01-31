@@ -8,6 +8,7 @@ import shipmentsRouter from '../backend/src/routes/shipments';
 import itemsRouter from '../backend/src/routes/items';
 import imagesRouter from '../backend/src/routes/images';
 import categoriesRouter from '../backend/src/routes/categories';
+import schedulesRouter from '../backend/src/routes/schedules';
 
 // Load environment variables
 dotenv.config();
@@ -247,6 +248,7 @@ app.use('/api/shipments', shipmentsRouter);
 app.use('/api/items', itemsRouter);
 app.use('/api/images', imagesRouter);
 app.use('/api/categories', categoriesRouter);
+app.use('/api', schedulesRouter);
 console.log('✅ All routes registered (including /api/categories)');
 
 // Error handling middleware
